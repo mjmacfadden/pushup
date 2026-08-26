@@ -208,10 +208,17 @@
             <span class="flame-animated">🔥</span>
             <div>
               <span class="streak-val" id="streakVal">0</span>
-              <span class="streak-lbl">DAY STREAK</span>
+              <span class="streak-lbl">CURRENT STREAK</span>
             </div>
           </div>
-          <div class="squad-tag" id="squadTagDash">No Squad</div>
+          <div class="streak-best">
+            <span class="streak-best-val" id="bestStreakVal">0</span>
+            <span class="streak-lbl">BEST</span>
+          </div>
+          <div class="streak-best">
+            <span class="streak-best-val" id="totalDaysVal">0</span>
+            <span class="streak-lbl">TOTAL</span>
+          </div>
         </div>
 
         <div class="daily-card" id="dailyCard">
@@ -235,13 +242,7 @@
           <span class="squad-count" id="gridLegend"></span>
         </div>
         <div class="commit-grid-wrapper">
-          <div class="commit-grid-months" id="commitGridMonths"></div>
-          <div class="commit-grid">
-            <div class="commit-grid-days">
-              <span></span><span>M</span><span></span><span>W</span><span></span><span>F</span><span></span>
-            </div>
-            <div class="commit-grid-cells" id="commitGridCells"></div>
-          </div>
+          <div class="commit-grid-cells" id="commitGridCells"></div>
         </div>
 
         <div class="section-title">
@@ -494,8 +495,8 @@
             <span class="stat-label">Best Streak</span>
           </div>
           <div class="profile-stat">
-            <span class="stat-num" id="profileTotal">0</span>
-            <span class="stat-label">Total Reps</span>
+            <span class="stat-num" id="profileTotalDays">0</span>
+            <span class="stat-label">Total Days</span>
           </div>
         </div>
 

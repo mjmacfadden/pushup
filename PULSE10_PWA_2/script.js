@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let username = LS.get('username', '');
   let streak = LS.get('streak', 0);
   let bestStreak = LS.get('bestStreak', 0);
+  let totalDays = LS.get('totalDays', 0);
   let totalReps = LS.get('totalReps', 0);
   let lastDropDate = LS.get('lastDropDate', '');
   let workoutHistory = LS.get('workoutHistory', {});
@@ -137,10 +138,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return new Date().toISOString().slice(0, 10);
   }
 
+  function yesterdayStr() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }
+
   function checkTodayDone() {
     if (lastDropDate === todayStr()) {
       isDoneToday = true;
       currentReps = targetReps;
+    } else if (lastDropDate && lastDropDate !== yesterdayStr()) {
+      streak = 0;
+      LS.set('streak', streak);
     }
   }
 
@@ -187,6 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    submitLogin();
+  });
+
+  function submitLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
     if (!email || !pass) {
@@ -201,6 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       showOnboarding();
     }
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    submitLogin();
   });
 
   // ============================================
@@ -210,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     authScreen.classList.remove('active');
     onboardScreen.classList.add('active');
     showOnboardStep('onboardStep1');
+    requestAnimationFrame(() => document.getElementById('usernameInput').focus());
   }
 
   function showOnboardStep(id) {
@@ -274,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnJoinSquad').addEventListener('click', () => {
     const code = getOnboardCode();
     if (code.length === 5) {
-      squads.push({ name: 'Joined Squad', code: code, members: MOCK_MEMBERS });
+      squads.push({ name: 'Push Crew', code: code, members: MOCK_MEMBERS });
       activeSquadIdx = squads.length - 1;
       saveSquads();
       showToast('Joined squad!');
@@ -410,6 +430,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const panel = document.getElementById(targetId);
     if (panel) panel.classList.add('active');
     appBody.scrollTop = 0;
+    if (targetId === 'viewToday') {
+      requestAnimationFrame(() => renderCommitGrid());
+    }
     if (targetId !== 'viewSquad') {
       document.getElementById('squadQRPanel').style.display = 'none';
     hideAllPanels();
@@ -429,9 +452,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('resetCounterBtn').addEventListener('click', () => {
+    if (isDoneToday) {
+      isDoneToday = false;
+      streak = Math.max(0, streak - 1);
+      totalDays = Math.max(0, totalDays - 1);
+      totalReps = Math.max(0, totalReps - targetReps);
+      delete workoutHistory[todayStr()];
+      lastDropDate = '';
+      LS.set('workoutHistory', workoutHistory);
+      LS.set('streak', streak);
+      LS.set('totalDays', totalDays);
+      LS.set('totalReps', totalReps);
+      LS.set('lastDropDate', lastDropDate);
+      renderAll();
+    }
     currentReps = 0;
     updateReps();
-    showToast('Counter reset');
+    showToast('Today\'s workout cleared');
   });
 
   // ============================================
@@ -500,8 +537,13 @@ document.addEventListener('DOMContentLoaded', () => {
   completeWorkoutBtn.addEventListener('click', () => {
     if (currentReps >= targetReps && !isDoneToday) {
       isDoneToday = true;
+
+      if (lastDropDate && lastDropDate !== yesterdayStr()) {
+        streak = 0;
+      }
       streak++;
       if (streak > bestStreak) bestStreak = streak;
+      totalDays++;
       totalReps += targetReps;
       lastDropDate = todayStr();
 
@@ -509,6 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
       LS.set('workoutHistory', workoutHistory);
       LS.set('streak', streak);
       LS.set('bestStreak', bestStreak);
+      LS.set('totalDays', totalDays);
       LS.set('totalReps', totalReps);
       LS.set('lastDropDate', lastDropDate);
 
@@ -524,55 +567,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   function renderCommitGrid() {
     const cellsContainer = document.getElementById('commitGridCells');
-    const monthsContainer = document.getElementById('commitGridMonths');
     const legend = document.getElementById('gridLegend');
+    const wrapper = cellsContainer.parentElement;
     if (!cellsContainer) return;
 
     const today = new Date();
-    const totalWeeks = 15;
-    const totalDays = totalWeeks * 7;
+    today.setHours(0, 0, 0, 0);
 
-    // Start from the Sunday of the earliest week
-    const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - totalDays + (6 - today.getDay()));
+    const colWidth = 11 + 3;
+    const availableWidth = wrapper.clientWidth - 24;
+    const totalWeeks = Math.max(1, Math.floor(availableWidth / colWidth));
 
-    // Count total workouts for legend
     const historyKeys = Object.keys(workoutHistory);
     legend.textContent = historyKeys.length + ' day' + (historyKeys.length !== 1 ? 's' : '') + ' logged';
 
-    // Build month labels
-    const monthWidth = 14; // cell(11) + gap(3)
-    monthsContainer.innerHTML = '';
-    let lastMonth = -1;
-    for (let w = 0; w < totalWeeks; w++) {
-      const weekStart = new Date(startDate);
-      weekStart.setDate(weekStart.getDate() + w * 7);
-      const m = weekStart.getMonth();
-      if (m !== lastMonth) {
-        const span = document.createElement('span');
-        span.textContent = weekStart.toLocaleString('default', { month: 'short' });
-        span.style.marginLeft = w === 0 ? '0' : (monthWidth * 1.5) + 'px';
-        monthsContainer.appendChild(span);
-        lastMonth = m;
-      }
-    }
-
-    // Build grid columns
     cellsContainer.innerHTML = '';
     for (let w = 0; w < totalWeeks; w++) {
       const col = document.createElement('div');
       col.className = 'commit-grid-col';
 
       for (let d = 0; d < 7; d++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + w * 7 + d);
+        const date = new Date(today);
+        date.setDate(date.getDate() - (w * 7 + d));
         const key = date.toISOString().slice(0, 10);
         const cell = document.createElement('div');
         cell.className = 'commit-cell';
 
-        if (date > today) {
-          // future - keep empty
-        } else if (workoutHistory[key]) {
+        if (workoutHistory[key]) {
           const reps = workoutHistory[key].reps || 0;
           const level = reps >= 10 ? 4 : reps >= 7 ? 3 : reps >= 4 ? 2 : reps >= 1 ? 1 : 0;
           cell.classList.add('level-' + level);
@@ -593,7 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderDashboard() {
     const sq = activeSquad();
     document.getElementById('streakVal').textContent = streak;
-    document.getElementById('squadTagDash').textContent = sq ? sq.name : 'No Squad';
+    document.getElementById('bestStreakVal').textContent = bestStreak;
+    document.getElementById('totalDaysVal').textContent = totalDays;
     document.getElementById('timeLeft').textContent = getTimeLeft();
 
     if (isDoneToday) {
@@ -612,51 +634,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Squad feed
     const feedList = document.getElementById('squadFeedList');
-    const members = sq ? sq.members : MOCK_MEMBERS;
     const userName = username || 'You';
     const userInitials = userName.slice(0, 2).toUpperCase();
 
-    let doneCount = 0;
-    if (isDoneToday) doneCount++;
-    members.forEach(m => { if (m.done) doneCount++; });
-    const total = members.length + 1;
-    document.getElementById('squadFeedCount').textContent = doneCount + '/' + total + ' Ready';
-
     feedList.innerHTML = '';
 
-    members.forEach(m => {
-      const card = document.createElement('div');
-      card.className = 'tm-card' + (m.done ? ' done' : '') + (m.slacker ? ' slacker' : '');
-      card.innerHTML =
-        '<div class="avatar-box">' + m.initials +
-          (m.done ? '<span class="badge-check">✓</span>' : '') +
-          (m.slacker ? '<span class="badge-alert">!</span>' : '') +
-        '</div>' +
+    if (!sq) {
+      document.getElementById('squadFeedCount').textContent = '';
+      const emptyCard = document.createElement('div');
+      emptyCard.className = 'tm-card empty-squad-feed';
+      emptyCard.innerHTML =
+        '<div class="tm-info" style="width:100%">' +
+          '<strong>No squad yet</strong>' +
+          '<span><a href="#" id="feedJoinLink" style="color:var(--accent-primary);text-decoration:none;">Join</a> or <a href="#" id="feedCreateLink" style="color:var(--accent-primary);text-decoration:none;">create</a> a squad to see your crew.</span>' +
+        '</div>';
+      feedList.appendChild(emptyCard);
+
+      emptyCard.querySelector('#feedJoinLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView('viewSquad');
+        document.getElementById('joinAnotherPanel').style.display = '';
+        setTimeout(() => document.querySelector('.switch-digit[data-idx="0"]').focus(), 100);
+      });
+      emptyCard.querySelector('#feedCreateLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView('viewSquad');
+        hideAllPanels();
+        document.getElementById('createSquadPanel').style.display = '';
+        document.getElementById('squadNameInputView').value = '';
+        document.getElementById('squadNameInputView').focus();
+      });
+    } else {
+      const members = sq.members;
+      let doneCount = 0;
+      if (isDoneToday) doneCount++;
+      members.forEach(m => { if (m.done) doneCount++; });
+      const total = members.length + 1;
+      document.getElementById('squadFeedCount').textContent = doneCount + '/' + total + ' Ready';
+
+      members.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'tm-card' + (m.done ? ' done' : '') + (m.slacker ? ' slacker' : '');
+        card.innerHTML =
+          '<div class="avatar-box">' + m.initials +
+            (m.done ? '<span class="badge-check">✓</span>' : '') +
+            (m.slacker ? '<span class="badge-alert">!</span>' : '') +
+          '</div>' +
+          '<div class="tm-info">' +
+            '<strong>' + m.name + '</strong>' +
+            '<span>' + (m.done ? 'Completed today' : (m.slacker ? '⚠️ Holding back the squad!' : 'Pending')) + '</span>' +
+          '</div>' +
+          (m.slacker ? '<button class="nudge-btn">NUDGE</button>' : '<span class="rep-stat">' + (m.done ? '10/10' : '0/10') + '</span>');
+        feedList.appendChild(card);
+
+        if (m.slacker) {
+          card.querySelector('.nudge-btn').addEventListener('click', () => {
+            showToast('Nudge sent to ' + m.name.split(' ')[0] + '!');
+          });
+        }
+      });
+    }
+
+    // User card (only show when in a squad)
+    if (sq) {
+      const userCard = document.createElement('div');
+      userCard.className = 'tm-card' + (isDoneToday ? ' done' : '');
+      userCard.innerHTML =
+        '<div class="avatar-box self">' + userInitials + (isDoneToday ? '<span class="badge-check">✓</span>' : '') + '</div>' +
         '<div class="tm-info">' +
-          '<strong>' + m.name + '</strong>' +
-          '<span>' + (m.done ? 'Completed today' : (m.slacker ? '⚠️ Holding back the squad!' : 'Pending')) + '</span>' +
+          '<strong>You (' + userName + ')</strong>' +
+          '<span>' + (isDoneToday ? 'Completed today' : 'Pending 10 reps') + '</span>' +
         '</div>' +
-        (m.slacker ? '<button class="nudge-btn">NUDGE</button>' : '<span class="rep-stat">' + (m.done ? '10/10' : '0/10') + '</span>');
-      feedList.appendChild(card);
-
-      if (m.slacker) {
-        card.querySelector('.nudge-btn').addEventListener('click', () => {
-          showToast('Nudge sent to ' + m.name.split(' ')[0] + '!');
-        });
-      }
-    });
-
-    // User card
-    const userCard = document.createElement('div');
-    userCard.className = 'tm-card' + (isDoneToday ? ' done' : '');
-    userCard.innerHTML =
-      '<div class="avatar-box self">' + userInitials + (isDoneToday ? '<span class="badge-check">✓</span>' : '') + '</div>' +
-      '<div class="tm-info">' +
-        '<strong>You (' + userName + ')</strong>' +
-        '<span>' + (isDoneToday ? 'Completed today' : 'Pending 10 reps') + '</span>' +
-      '</div>' +
-      '<span class="rep-stat" style="' + (isDoneToday ? 'color:var(--accent-primary)' : '') + '">' + (isDoneToday ? '10/10' : '0/10') + '</span>';
-    feedList.appendChild(userCard);
+        '<span class="rep-stat" style="' + (isDoneToday ? 'color:var(--accent-primary)' : '') + '">' + (isDoneToday ? '10/10' : '0/10') + '</span>';
+      feedList.appendChild(userCard);
+    }
   }
 
   // ============================================
@@ -1121,7 +1172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('profileRole').textContent = 'GrindStone Member' + (sq ? ' • ' + sq.name : '');
     document.getElementById('profileStreak').textContent = streak;
     document.getElementById('profileBest').textContent = bestStreak;
-    document.getElementById('profileTotal').textContent = totalReps;
+    document.getElementById('profileTotalDays').textContent = totalDays;
   }
 
   // ============================================
@@ -1132,6 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     LS.remove('username');
     LS.remove('streak');
     LS.remove('bestStreak');
+    LS.remove('totalDays');
     LS.remove('totalReps');
     LS.remove('lastDropDate');
     LS.remove('squads');
@@ -1141,6 +1193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     username = '';
     streak = 0;
     bestStreak = 0;
+    totalDays = 0;
     totalReps = 0;
     lastDropDate = '';
     squads = [];
@@ -1168,10 +1221,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // DEV TOOLS
   // ============================================
   document.getElementById('btnClearDay').addEventListener('click', () => {
+    delete workoutHistory[todayStr()];
+    LS.set('workoutHistory', workoutHistory);
     LS.remove('lastDropDate');
     LS.remove('totalReps');
+    LS.remove('totalDays');
     lastDropDate = '';
     totalReps = 0;
+    totalDays = 0;
+    streak = 0;
     currentReps = 0;
     isDoneToday = false;
     renderAll();
@@ -1189,18 +1247,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     for (let i = 0; i < 10; i++) {
       const d = new Date(now);
-      d.setDate(d.getDate() - i);
+      d.setDate(d.getDate() - i - 2);
       const key = d.toISOString().slice(0, 10);
       history[key] = { reps: 10 };
     }
     workoutHistory = history;
     streak = 10;
     bestStreak = Math.max(bestStreak, 10);
+    totalDays = 10;
     totalReps = 100;
     lastDropDate = todayStr();
     LS.set('workoutHistory', workoutHistory);
     LS.set('streak', streak);
     LS.set('bestStreak', bestStreak);
+    LS.set('totalDays', totalDays);
     LS.set('totalReps', totalReps);
     LS.set('lastDropDate', lastDropDate);
     renderAll();
