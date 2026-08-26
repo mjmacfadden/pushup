@@ -788,6 +788,26 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================================
+  // DEV TOOLS
+  // ============================================
+  document.getElementById('btnClearDay').addEventListener('click', () => {
+    LS.remove('lastDropDate');
+    LS.remove('totalReps');
+    lastDropDate = '';
+    totalReps = 0;
+    currentReps = 0;
+    isDoneToday = false;
+    renderAll();
+    showToast('Today\'s set cleared');
+  });
+
+  document.getElementById('btnClearAll').addEventListener('click', () => {
+    if (!confirm('Clear ALL local data? This cannot be undone.')) return;
+    localStorage.clear();
+    location.reload();
+  });
+
+  // ============================================
   // COUNTDOWN TIMER
   // ============================================
   function updateCountdown() {

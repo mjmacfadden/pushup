@@ -744,13 +744,13 @@ body.light-theme .icon-light { display: block; }
 /* Watermark */
 .workout-watermark {
   position: absolute;
-  top: 50%;
+  top: 62%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.1);
   letter-spacing: 6px;
   pointer-events: none;
   white-space: nowrap;
@@ -785,7 +785,7 @@ body.light-theme .icon-light { display: block; }
 /* Counter - centered over video */
 .workout-counter {
   position: absolute;
-  top: 50%;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
