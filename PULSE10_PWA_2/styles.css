@@ -625,6 +625,99 @@ body.light-theme .icon-light { display: block; }
    ============================================ */
 .section-title { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 .section-title h3 { font-size: 14px; font-weight: 700; }
+
+/* ============================================
+   Commit Grid (GitHub-style heatmap)
+   ============================================ */
+.commit-grid-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.commit-grid-months {
+  display: flex;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding-left: 22px;
+  margin-bottom: 4px;
+}
+
+.commit-grid-months span {
+  flex-shrink: 0;
+}
+
+.commit-grid {
+  display: flex;
+  gap: 4px;
+}
+
+.commit-grid-days {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 11px;
+  padding-top: 1px;
+}
+
+.commit-grid-days span {
+  height: 11px;
+  width: 14px;
+  text-align: right;
+}
+
+.commit-grid-cells {
+  display: flex;
+  gap: 3px;
+}
+
+.commit-grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.commit-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  position: relative;
+}
+
+.commit-cell.level-1 { background: rgba(183, 243, 74, 0.2); }
+.commit-cell.level-2 { background: rgba(183, 243, 74, 0.4); }
+.commit-cell.level-3 { background: rgba(183, 243, 74, 0.65); }
+.commit-cell.level-4 { background: var(--accent-primary); }
+
+.commit-cell[title]::after {
+  content: attr(title);
+  display: none;
+}
+
+.commit-cell:hover::after {
+  display: block;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
 .squad-count { font-size: 11px; color: var(--text-secondary); }
 
 .squad-list { display: flex; flex-direction: column; gap: 10px; }

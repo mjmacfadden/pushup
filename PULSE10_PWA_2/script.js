@@ -330,6 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderAll() {
     renderSquadToggles();
     renderDashboard();
+    renderCommitGrid();
     renderSquadView();
     renderProfile();
   }
@@ -517,6 +518,74 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Workout saved! Squad notified.');
     }
   });
+
+  // ============================================
+  // COMMIT GRID
+  // ============================================
+  function renderCommitGrid() {
+    const cellsContainer = document.getElementById('commitGridCells');
+    const monthsContainer = document.getElementById('commitGridMonths');
+    const legend = document.getElementById('gridLegend');
+    if (!cellsContainer) return;
+
+    const today = new Date();
+    const totalWeeks = 15;
+    const totalDays = totalWeeks * 7;
+
+    // Start from the Sunday of the earliest week
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - totalDays + (6 - today.getDay()));
+
+    // Count total workouts for legend
+    const historyKeys = Object.keys(workoutHistory);
+    legend.textContent = historyKeys.length + ' day' + (historyKeys.length !== 1 ? 's' : '') + ' logged';
+
+    // Build month labels
+    const monthWidth = 14; // cell(11) + gap(3)
+    monthsContainer.innerHTML = '';
+    let lastMonth = -1;
+    for (let w = 0; w < totalWeeks; w++) {
+      const weekStart = new Date(startDate);
+      weekStart.setDate(weekStart.getDate() + w * 7);
+      const m = weekStart.getMonth();
+      if (m !== lastMonth) {
+        const span = document.createElement('span');
+        span.textContent = weekStart.toLocaleString('default', { month: 'short' });
+        span.style.marginLeft = w === 0 ? '0' : (monthWidth * 1.5) + 'px';
+        monthsContainer.appendChild(span);
+        lastMonth = m;
+      }
+    }
+
+    // Build grid columns
+    cellsContainer.innerHTML = '';
+    for (let w = 0; w < totalWeeks; w++) {
+      const col = document.createElement('div');
+      col.className = 'commit-grid-col';
+
+      for (let d = 0; d < 7; d++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + w * 7 + d);
+        const key = date.toISOString().slice(0, 10);
+        const cell = document.createElement('div');
+        cell.className = 'commit-cell';
+
+        if (date > today) {
+          // future - keep empty
+        } else if (workoutHistory[key]) {
+          const reps = workoutHistory[key].reps || 0;
+          const level = reps >= 10 ? 4 : reps >= 7 ? 3 : reps >= 4 ? 2 : reps >= 1 ? 1 : 0;
+          cell.classList.add('level-' + level);
+        }
+
+        const label = date.toLocaleString('default', { month: 'short', day: 'numeric' });
+        const reps = workoutHistory[key] ? workoutHistory[key].reps : 0;
+        cell.setAttribute('title', label + ': ' + reps + ' reps');
+        col.appendChild(cell);
+      }
+      cellsContainer.appendChild(col);
+    }
+  }
 
   // ============================================
   // RENDER DASHBOARD
