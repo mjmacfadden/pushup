@@ -70,10 +70,17 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const MOCK_MEMBERS_2 = [
-    { name: 'Chris P.', initials: 'CP', streak: 22, done: true },
-    { name: 'Dana L.', initials: 'DL', streak: 15, done: false, slacker: true },
-    { name: 'Evan T.', initials: 'ET', streak: 9, done: true },
+    { name: 'Jones', initials: 'JO', streak: 18, done: true },
+    { name: 'Paul', initials: 'PA', streak: 12, done: true },
+    { name: 'Alex N.', initials: 'AN', streak: 7, done: false, slacker: true },
+    { name: 'Wise', initials: 'WI', streak: 21, done: true },
   ];
+
+  const MOCK_MEMBER_SETS = [MOCK_MEMBERS, MOCK_MEMBERS_2];
+
+  function nextMockMembers() {
+    return MOCK_MEMBER_SETS[squads.length % MOCK_MEMBER_SETS.length];
+  }
 
   function generateCode() {
     return String(Math.floor(10000 + Math.random() * 90000));
@@ -119,6 +126,25 @@ document.addEventListener('DOMContentLoaded', () => {
     pwaToast.textContent = msg;
     pwaToast.classList.add('show');
     setTimeout(() => pwaToast.classList.remove('show'), 2500);
+  }
+
+  // ============================================
+  // Custom Confirm
+  // ============================================
+  function showConfirm(msg) {
+    return new Promise(resolve => {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmMessage').textContent = msg;
+      modal.style.display = '';
+      modal.classList.add('active');
+      const cleanup = (result) => {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        resolve(result);
+      };
+      document.getElementById('confirmOk').onclick = () => cleanup(true);
+      document.getElementById('confirmCancel').onclick = () => cleanup(false);
+    });
   }
 
   // ============================================
@@ -294,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnJoinSquad').addEventListener('click', () => {
     const code = getOnboardCode();
     if (code.length === 5) {
-      squads.push({ name: 'Push Crew', code: code, members: MOCK_MEMBERS });
+      squads.push({ name: squads.length > 0 ? 'CTE Crew' : 'Push Crew', code: code, members: nextMockMembers() });
       activeSquadIdx = squads.length - 1;
       saveSquads();
       showToast('Joined squad!');
@@ -308,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = document.getElementById('squadNameInput').value.trim();
     if (!name) { showToast('Enter a squad name'); return; }
     const code = generateCode();
-    squads.push({ name: name, code: code, members: MOCK_MEMBERS });
+    squads.push({ name: name, code: code, members: nextMockMembers() });
     activeSquadIdx = squads.length - 1;
     saveSquads();
     document.getElementById('createdSquadCode').textContent = code;
@@ -718,10 +744,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   // LEAVE SQUAD
   // ============================================
-  document.getElementById('btnLeaveSquad').addEventListener('click', () => {
+  document.getElementById('btnLeaveSquad').addEventListener('click', async () => {
     const sq = activeSquad();
     if (!sq) return;
-    if (!confirm('Leave "' + sq.name + '"? Your streak will be preserved.')) return;
+    if (!await showConfirm('Leave "' + sq.name + '"? Your streak will be preserved.')) return;
     squads.splice(activeSquadIdx, 1);
     if (activeSquadIdx >= squads.length) activeSquadIdx = Math.max(0, squads.length - 1);
     saveSquads();
@@ -777,11 +803,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnConfirmJoinAnother').addEventListener('click', () => {
     const code = getSwitchCode();
     if (code.length !== 5) return;
-    squads.push({ name: 'Joined Squad', code: code, members: MOCK_MEMBERS });
-    activeSquadIdx = squads.length - 1;
-    saveSquads();
-    hideAllPanels();
-    switchDigits.forEach(d => d.value = '');
+      squads.push({ name: squads.length > 0 ? 'CTE Crew' : 'Push Crew', code: code, members: nextMockMembers() });
+      activeSquadIdx = squads.length - 1;
+      saveSquads();
+      hideAllPanels();
+      switchDigits.forEach(d => d.value = '');
     updateJoinAnotherBtn();
     renderAll();
     showToast('Joined new squad!');
@@ -805,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = document.getElementById('squadNameInputView').value.trim();
     if (!name) { showToast('Enter a squad name'); return; }
     const code = generateCode();
-    squads.push({ name: name, code: code, members: MOCK_MEMBERS });
+    squads.push({ name: name, code: code, members: nextMockMembers() });
     activeSquadIdx = squads.length - 1;
     saveSquads();
     document.getElementById('createdSquadCodeView').textContent = code;
@@ -1003,14 +1029,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Watermark
     recordCtx.save();
     recordCtx.font = `900 ${Math.round(vw * 0.045)}px sans-serif`;
-    recordCtx.fillStyle = 'rgba(255,255,255,0.1)';
+    recordCtx.fillStyle = 'rgba(255,255,255,0.3)';
     recordCtx.textAlign = 'center';
     recordCtx.textBaseline = 'middle';
     recordCtx.fillText('GRINDSTONE', vw / 2, vh * 0.62);
     recordCtx.restore();
 
     // Ring
-    const ringR = Math.round(vw * 0.12);
+    const ringR = Math.round(vw * 0.16);
     const cx = vw / 2;
     const cy = vh * 0.40;
     const circumference = 2 * Math.PI * 52;
@@ -1039,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Rep number
     recordCtx.save();
-    recordCtx.font = `800 ${Math.round(vw * 0.1)}px 'JetBrains Mono', monospace`;
+    recordCtx.font = `800 ${Math.round(vw * 0.12)}px 'JetBrains Mono', monospace`;
     recordCtx.fillStyle = '#fff';
     recordCtx.textAlign = 'center';
     recordCtx.textBaseline = 'middle';
@@ -1250,8 +1276,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Today\'s set cleared');
   });
 
-  document.getElementById('btnClearAll').addEventListener('click', () => {
-    if (!confirm('Clear ALL local data? This cannot be undone.')) return;
+  document.getElementById('btnClearAll').addEventListener('click', async () => {
+    if (!await showConfirm('Clear ALL local data? This cannot be undone.')) return;
     localStorage.clear();
     location.reload();
   });

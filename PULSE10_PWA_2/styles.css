@@ -817,7 +817,7 @@ body.light-theme .icon-light { display: block; }
   z-index: 2;
   font-size: 28px;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
   letter-spacing: 6px;
   pointer-events: none;
   white-space: nowrap;
@@ -863,13 +863,13 @@ body.light-theme .icon-light { display: block; }
 }
 
 .workout-ring-svg {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   transform: rotate(-90deg);
 }
 
-.ring-bg { fill: none; stroke: rgba(255, 255, 255, 0.1); stroke-width: 10; }
-.ring-progress { fill: none; stroke: var(--accent-primary); stroke-width: 10; stroke-dasharray: 326.72; stroke-linecap: round; transition: stroke-dashoffset 0.25s ease; }
+.ring-bg { fill: none; stroke: rgba(255, 255, 255, 0.1); stroke-width: 12; }
+.ring-progress { fill: none; stroke: var(--accent-primary); stroke-width: 12; stroke-dasharray: 326.72; stroke-linecap: round; transition: stroke-dashoffset 0.25s ease; }
 
 .workout-rep-display {
   position: absolute;
@@ -880,7 +880,7 @@ body.light-theme .icon-light { display: block; }
 
 .workout-rep-display .rep-num {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 56px;
+  font-size: 68px;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);

@@ -567,6 +567,17 @@
 
     <!-- Toast -->
     <div class="pwa-toast" id="pwaToast">Message</div>
+
+    <!-- Custom Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal" style="display:none">
+      <div class="modal-card">
+        <p id="confirmMessage"></p>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button class="sec-btn" id="confirmCancel" style="flex:1;justify-content:center;">Cancel</button>
+          <button class="primary-btn" id="confirmOk" style="flex:1;justify-content:center;background:var(--warning-color);">Confirm</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="qrcode.min.js"></script>
