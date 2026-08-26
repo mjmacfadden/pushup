@@ -491,6 +491,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // SOUND + HAPTIC FEEDBACK
   // ============================================
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioDest = audioCtx.createMediaStreamDestination();
+  const audioMixer = audioCtx.createGain();
+  audioMixer.gain.value = 1;
+  audioMixer.connect(audioCtx.destination);
+  audioMixer.connect(audioDest);
 
   function playTapSound() {
     if (!soundEnabled) return;
@@ -502,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-    osc.connect(gain).connect(audioCtx.destination);
+    osc.connect(gain).connect(audioMixer);
     osc.start();
     osc.stop(audioCtx.currentTime + 0.1);
   }
@@ -954,6 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function resetCamera() {
     stopCamera();
+    if (micSource) { micSource.disconnect(); micSource = null; }
     micTrack = null;
   }
 
@@ -1052,13 +1058,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Start / stop recording ---
+  let micSource = null;
   async function startRecording() {
     if (!cameraStream) return;
 
-    // Get mic
+    // Get mic and route through the mixer
     try {
       const audio = await navigator.mediaDevices.getUserMedia({ audio: true });
       micTrack = audio.getAudioTracks()[0];
+      micSource = audioCtx.createMediaStreamSource(audio);
+      micSource.connect(audioMixer);
     } catch (e) {
       // mic optional
     }
@@ -1069,7 +1078,11 @@ document.addEventListener('DOMContentLoaded', () => {
     drawFrame();
 
     const canvasStream = recordCanvas.captureStream(30);
-    if (micTrack) canvasStream.addTrack(micTrack);
+    const audioStream = audioDest.stream;
+    const combined = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...audioStream.getAudioTracks()
+    ]);
 
     const mimeType = MediaRecorder.isTypeSupported('video/mp4')
       ? 'video/mp4'
@@ -1077,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ? 'video/webm;codecs=vp9'
         : 'video/webm';
     const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-    mediaRecorder = new MediaRecorder(canvasStream, { mimeType });
+    mediaRecorder = new MediaRecorder(combined, { mimeType });
     recordedChunks = [];
 
     mediaRecorder.ondataavailable = (e) => {
@@ -1085,6 +1098,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     mediaRecorder.onstop = () => {
+      if (micSource) { micSource.disconnect(); micSource = null; }
       if (micTrack) { micTrack.stop(); micTrack = null; }
       cancelAnimationFrame(drawFrameId);
       const blob = new Blob(recordedChunks, { type: mimeType });
