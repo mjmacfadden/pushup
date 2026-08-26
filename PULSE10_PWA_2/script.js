@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isDoneToday = false;
   let cameraStream = null;
   let cameraOn = false;
+  let micStream = null;
 
   function activeSquad() {
     if (squads.length === 0) return null;
@@ -340,12 +341,53 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   // INSTALL BANNER
   // ============================================
+  let deferredPrompt = null;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!isStandalone) pwaBanner.style.display = '';
+  });
+
+  // Show banner on iOS if not already installed
+  if (isIOS && !isStandalone) {
+    setTimeout(() => { pwaBanner.style.display = ''; }, 3000);
+  }
+
   document.getElementById('closeBannerBtn').addEventListener('click', () => {
     pwaBanner.style.display = 'none';
   });
-  document.getElementById('installBtn').addEventListener('click', () => {
-    showToast('Installed to Home Screen!');
+
+  document.getElementById('installBtn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      // Android/Chrome: trigger native install prompt
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') showToast('Installed to Home Screen!');
+      deferredPrompt = null;
+      pwaBanner.style.display = 'none';
+    } else if (isIOS) {
+      // iOS: show instructions modal
+      showIOSInstallModal();
+    } else {
+      showToast('Use your browser menu to install');
+      pwaBanner.style.display = 'none';
+    }
+  });
+
+  function showIOSInstallModal() {
     pwaBanner.style.display = 'none';
+    const modal = document.getElementById('iosInstallModal');
+    modal.style.display = '';
+    modal.classList.add('active');
+  }
+
+  document.getElementById('closeIOSInstall').addEventListener('click', () => {
+    const modal = document.getElementById('iosInstallModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
   });
 
   // ============================================
@@ -355,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewPanels = document.querySelectorAll('.view-panel');
 
   function switchView(targetId) {
+    if (targetId !== 'viewWorkout') resetCamera();
     viewPanels.forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => {
@@ -699,40 +742,257 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================================
-  // CAMERA + RECORD TOGGLE
+  // CAMERA + RECORDING
   // ============================================
   const camVideo = document.getElementById('camVideo');
   const recBadge = document.getElementById('recBadge');
   const recordToggleBtn = document.getElementById('recordToggleBtn');
+  const recordCanvas = document.getElementById('recordCanvas');
+  const recordCtx = recordCanvas.getContext('2d');
+  let micTrack = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let isRecording = false;
+  let drawFrameId = null;
+
+  // 0=off, 1=cam on, 2=recording
+  let recordState = 0;
 
   async function startCamera() {
     try {
       cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
       camVideo.srcObject = cameraStream;
       cameraOn = true;
-      recordToggleBtn.classList.add('recording');
-      recBadge.classList.add('active');
+      recordState = 1;
+      updateRecordBtn();
     } catch (err) {
       showToast('Camera access denied');
     }
   }
 
   function stopCamera() {
+    if (isRecording) stopRecording();
     if (cameraStream) {
       cameraStream.getTracks().forEach(t => t.stop());
       cameraStream = null;
     }
     camVideo.srcObject = null;
     cameraOn = false;
-    recordToggleBtn.classList.remove('recording');
+    recordState = 0;
+    updateRecordBtn();
     recBadge.classList.remove('active');
   }
 
+  function resetCamera() {
+    stopCamera();
+    micTrack = null;
+  }
+
+  function updateRecordBtn() {
+    const doneBtn = document.getElementById('completeWorkoutBtn');
+    recordToggleBtn.classList.remove('cam-on', 'recording');
+    if (recordState === 0) {
+      recordToggleBtn.innerHTML = '<svg class="cam-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+      doneBtn.style.display = '';
+    } else if (recordState === 1) {
+      recordToggleBtn.classList.add('cam-on');
+      recordToggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/></svg>';
+      doneBtn.style.display = '';
+    } else if (recordState === 2) {
+      recordToggleBtn.classList.add('recording');
+      recordToggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4757"/></svg>';
+      doneBtn.style.display = 'none';
+      recBadge.classList.add('active');
+    }
+  }
+
+  // --- Canvas compositing loop ---
+  function drawFrame() {
+    if (!cameraOn) return;
+    const vw = camVideo.videoWidth || 640;
+    const vh = camVideo.videoHeight || 480;
+    if (recordCanvas.width !== vw) recordCanvas.width = vw;
+    if (recordCanvas.height !== vh) recordCanvas.height = vh;
+
+    // Draw mirrored video
+    recordCtx.save();
+    recordCtx.translate(vw, 0);
+    recordCtx.scale(-1, 1);
+    recordCtx.drawImage(camVideo, 0, 0, vw, vh);
+    recordCtx.restore();
+
+    // Darken overlay
+    recordCtx.fillStyle = 'rgba(0,0,0,0.15)';
+    recordCtx.fillRect(0, 0, vw, vh);
+
+    // Watermark
+    recordCtx.save();
+    recordCtx.font = `900 ${Math.round(vw * 0.045)}px sans-serif`;
+    recordCtx.fillStyle = 'rgba(255,255,255,0.1)';
+    recordCtx.textAlign = 'center';
+    recordCtx.textBaseline = 'middle';
+    recordCtx.fillText('GRINDSTONE', vw / 2, vh * 0.62);
+    recordCtx.restore();
+
+    // Ring
+    const ringR = Math.round(vw * 0.12);
+    const cx = vw / 2;
+    const cy = vh * 0.40;
+    const circumference = 2 * Math.PI * 52;
+    const progress = currentReps / targetReps;
+    const offset = circumference * (1 - progress);
+
+    recordCtx.save();
+    recordCtx.translate(cx, cy);
+    recordCtx.rotate(-Math.PI / 2);
+
+    // Ring bg
+    recordCtx.beginPath();
+    recordCtx.arc(0, 0, ringR, 0, Math.PI * 2);
+    recordCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+    recordCtx.lineWidth = ringR * 0.19;
+    recordCtx.stroke();
+
+    // Ring progress
+    recordCtx.beginPath();
+    recordCtx.arc(0, 0, ringR, 0, Math.PI * 2 * progress);
+    recordCtx.strokeStyle = '#b7f34a';
+    recordCtx.lineWidth = ringR * 0.19;
+    recordCtx.lineCap = 'round';
+    recordCtx.stroke();
+    recordCtx.restore();
+
+    // Rep number
+    recordCtx.save();
+    recordCtx.font = `800 ${Math.round(vw * 0.1)}px 'JetBrains Mono', monospace`;
+    recordCtx.fillStyle = '#fff';
+    recordCtx.textAlign = 'center';
+    recordCtx.textBaseline = 'middle';
+    recordCtx.shadowColor = 'rgba(0,0,0,0.5)';
+    recordCtx.shadowBlur = 12;
+    recordCtx.fillText(String(currentReps), cx, cy);
+    recordCtx.shadowBlur = 0;
+
+    // Rep label
+    recordCtx.font = `700 ${Math.round(vw * 0.02)}px sans-serif`;
+    recordCtx.fillStyle = 'rgba(255,255,255,0.5)';
+    recordCtx.fillText('/ ' + targetReps + ' REPS', cx, cy + ringR * 0.55);
+    recordCtx.restore();
+
+    if (isRecording) drawFrameId = requestAnimationFrame(drawFrame);
+  }
+
+  // --- Start / stop recording ---
+  async function startRecording() {
+    if (!cameraStream) return;
+
+    // Get mic
+    try {
+      const audio = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micTrack = audio.getAudioTracks()[0];
+    } catch (e) {
+      // mic optional
+    }
+
+    // Draw first frame so canvas has content
+    recordCanvas.width = camVideo.videoWidth || 640;
+    recordCanvas.height = camVideo.videoHeight || 480;
+    drawFrame();
+
+    const canvasStream = recordCanvas.captureStream(30);
+    if (micTrack) canvasStream.addTrack(micTrack);
+
+    const mimeType = MediaRecorder.isTypeSupported('video/mp4')
+      ? 'video/mp4'
+      : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+    const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    mediaRecorder = new MediaRecorder(canvasStream, { mimeType });
+    recordedChunks = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      if (micTrack) { micTrack.stop(); micTrack = null; }
+      cancelAnimationFrame(drawFrameId);
+      const blob = new Blob(recordedChunks, { type: mimeType });
+      showRecordingPreview(blob, ext);
+    };
+
+    mediaRecorder.start(100);
+    isRecording = true;
+    recordState = 2;
+    updateRecordBtn();
+    drawFrame();
+    showToast('Recording started');
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    isRecording = false;
+    recordState = 1;
+    updateRecordBtn();
+    recBadge.classList.remove('active');
+    showToast('Recording stopped');
+  }
+
+  // --- Preview modal ---
+  function showRecordingPreview(blob, ext) {
+    const url = URL.createObjectURL(blob);
+    const previewVideo = document.getElementById('previewVideo');
+    previewVideo.src = url;
+
+    const modal = document.getElementById('recordingPreviewModal');
+    modal.style.display = '';
+    modal.classList.add('active');
+
+    document.getElementById('btnDownloadRec').onclick = () => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'grindstone-' + Date.now() + '.' + ext;
+      a.click();
+    };
+
+    document.getElementById('btnShareRec').onclick = async () => {
+      const file = new File([blob], 'grindstone-' + Date.now() + '.' + ext, { type: blob.type });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'GrindStone Workout' });
+        } catch (e) {
+          if (e.name !== 'AbortError') showToast('Share failed');
+        }
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'grindstone-' + Date.now() + '.' + ext;
+        a.click();
+      }
+    };
+
+    document.getElementById('btnClosePreview').onclick = () => {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  // --- Record button click handler ---
   recordToggleBtn.addEventListener('click', () => {
-    if (cameraOn) stopCamera(); else startCamera();
+    if (recordState === 0) {
+      startCamera();
+    } else if (recordState === 1) {
+      startRecording();
+    } else if (recordState === 2) {
+      stopRecording();
+    }
   });
 
   // ============================================

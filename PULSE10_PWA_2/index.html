@@ -238,6 +238,9 @@
 
       <!-- WORKOUT / REP COUNTER & NOSE CAM -->
       <section id="viewWorkout" class="view-panel workout-fullscreen">
+        <!-- Hidden canvas for compositing video + overlays -->
+        <canvas id="recordCanvas" style="display:none"></canvas>
+
         <!-- Video Background -->
         <div class="workout-video-bg" id="workoutVideoBg">
           <video id="camVideo" autoplay playsinline muted></video>
@@ -292,6 +295,48 @@
           </div>
         </div>
       </section>
+
+      <!-- Recording Preview Modal -->
+      <div class="modal-overlay" id="recordingPreviewModal" style="display:none">
+        <div class="modal-card">
+          <h3>Recording Complete</h3>
+          <video id="previewVideo" controls style="width:100%;border-radius:8px;margin:12px 0;background:#000;"></video>
+          <div style="display:flex;gap:10px;">
+            <button class="sec-btn" id="btnDownloadRec" style="flex:1;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+            <button class="primary-btn" id="btnShareRec" style="flex:1;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share
+            </button>
+          </div>
+          <button class="sec-btn" id="btnClosePreview" style="margin-top:8px;width:100%;justify-content:center;">Close</button>
+        </div>
+      </div>
+
+      <!-- iOS Install Instructions Modal -->
+      <div class="modal-overlay" id="iosInstallModal" style="display:none">
+        <div class="modal-card">
+          <h3>Install GrindStone</h3>
+          <div class="ios-install-steps">
+            <div class="ios-step">
+              <span class="ios-step-num">1</span>
+              <span>Tap the <strong>Share</strong> button in Safari's toolbar</span>
+            </div>
+            <div class="ios-step">
+              <span class="ios-step-num">2</span>
+              <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+            </div>
+            <div class="ios-step">
+              <span class="ios-step-num">3</span>
+              <span>Tap <strong>Add</strong> in the top right corner</span>
+            </div>
+          </div>
+          <p class="ios-install-note">GrindStone will appear on your home screen like a native app.</p>
+          <button class="primary-btn" id="closeIOSInstall" style="width:100%;justify-content:center;margin-top:8px;">Got it</button>
+        </div>
+      </div>
 
       <!-- SQUAD LEADERBOARD -->
       <section id="viewSquad" class="view-panel">

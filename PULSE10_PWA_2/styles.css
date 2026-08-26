@@ -924,20 +924,12 @@ body.light-theme .icon-light { display: block; }
 
 .workout-record-btn.recording {
   border-color: #ff4757;
-  background: rgba(255, 71, 87, 0.2);
-  color: #ff4757;
+  background: rgba(255, 71, 87, 0.25);
 }
 
-.workout-record-btn.recording .cam-icon {
-  display: none;
-}
-
-.workout-record-btn.recording::after {
-  content: '';
-  width: 20px;
-  height: 20px;
-  background: #ff4757;
-  border-radius: 4px;
+.workout-record-btn.cam-on {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .workout-done-btn {
@@ -1060,6 +1052,73 @@ body.light-theme .icon-light { display: block; }
 }
 
 .fab-icon:active { transform: scale(0.92); }
+
+/* ============================================
+   Modal
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.modal-card h3 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.ios-install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.ios-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ios-step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: #111;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ios-install-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
+}
 
 /* ============================================
    Toast
