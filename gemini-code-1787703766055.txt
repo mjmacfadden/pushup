@@ -1,0 +1,5 @@
+PULSE10_PWA_Standalone_Wireframe.zip
+├── index.html     # Standalone PWA app shell and view containers
+├── styles.css     # Native mobile UI styling, flexbox layouts & CSS variables
+├── script.js      # Tab routing, nose-tap counter, haptics & notifications
+└── manifest.json  # PWA web app manifest configuration

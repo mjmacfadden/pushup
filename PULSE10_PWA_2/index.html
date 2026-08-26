@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f110f">
+  <title>GrindStone — PWA Wireframe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+
+  <div class="pwa-container">
+
+    <!-- ========== AUTH SCREEN ========== -->
+    <div id="authScreen" class="fullscreen-overlay active">
+      <div class="auth-content">
+        <div class="auth-logo">
+          <svg viewBox="0 0 80 80" width="72" height="72">
+            <rect x="10" y="28" width="60" height="28" rx="6" fill="none" stroke="#b7f34a" stroke-width="3"/>
+            <rect x="18" y="34" width="44" height="16" rx="3" fill="none" stroke="#b7f34a" stroke-width="2" stroke-dasharray="4 3"/>
+            <line x1="40" y1="18" x2="40" y2="28" stroke="#b7f34a" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="40" cy="14" r="4" fill="none" stroke="#b7f34a" stroke-width="2"/>
+          </svg>
+        </div>
+        <h1 class="auth-title">GrindStone</h1>
+        <p class="auth-subtitle">Put your nose to it.</p>
+        <form id="loginForm" class="auth-form">
+          <div class="auth-field">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Any password works" autocomplete="current-password">
+          </div>
+          <button type="submit" class="primary-btn" id="loginBtn">
+            <span>Sign In</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </form>
+        <p class="auth-footer">Demo mode — any email &amp; password works</p>
+      </div>
+    </div>
+
+    <!-- ========== ONBOARDING SCREEN ========== -->
+    <div id="onboardScreen" class="fullscreen-overlay">
+      <div class="auth-content">
+        <div class="onboard-step" id="onboardStep1">
+          <div class="onboard-illustration">
+            <svg viewBox="0 0 120 80" width="140" height="90">
+              <circle cx="30" cy="40" r="14" fill="none" stroke="#b7f34a" stroke-width="2"/>
+              <text x="30" y="44" text-anchor="middle" fill="#b7f34a" font-size="12" font-weight="800">Y</text>
+              <circle cx="60" cy="40" r="14" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 3"/>
+              <text x="60" y="44" text-anchor="middle" fill="#555" font-size="12" font-weight="800">+</text>
+              <circle cx="90" cy="40" r="14" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 3"/>
+              <text x="90" y="44" text-anchor="middle" fill="#555" font-size="12" font-weight="800">+</text>
+            </svg>
+          </div>
+          <h2>Welcome to GrindStone</h2>
+          <p class="auth-subtitle">Let's get you set up. What should we call you?</p>
+          <form id="onboardForm" class="auth-form">
+            <div class="auth-field">
+              <label>Your Name</label>
+              <input type="text" id="usernameInput" placeholder="e.g. Mike" maxlength="20" autocomplete="off">
+            </div>
+            <button type="submit" class="primary-btn">
+              <span>Continue</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </form>
+        </div>
+        <div class="onboard-step" id="onboardStep2" style="display:none">
+          <div class="onboard-illustration">
+            <svg viewBox="0 0 120 80" width="140" height="90">
+              <rect x="20" y="10" width="80" height="60" rx="8" fill="none" stroke="#b7f34a" stroke-width="2"/>
+              <line x1="20" y1="26" x2="100" y2="26" stroke="#b7f34a" stroke-width="1.5" opacity="0.4"/>
+              <rect x="32" y="34" width="56" height="8" rx="4" fill="#b7f34a" opacity="0.3"/>
+              <rect x="32" y="48" width="36" height="8" rx="4" fill="#b7f34a" opacity="0.15"/>
+            </svg>
+          </div>
+          <h2>Join the Grind</h2>
+          <p class="auth-subtitle">Enter a squad code or create your own.</p>
+          <div class="onboard-squad-actions">
+            <button class="primary-btn" id="btnShowJoin">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              <span>Join a Squad</span>
+            </button>
+            <button class="sec-btn" id="btnShowCreate">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Create a Squad</span>
+            </button>
+          </div>
+          <button class="text-btn" id="btnSkipSquad">Skip for now</button>
+        </div>
+        <!-- Join Sub-view -->
+        <div class="onboard-step" id="onboardJoin" style="display:none">
+          <h2>Enter Squad Code</h2>
+          <p class="auth-subtitle">Ask your friend for the 5-digit code.</p>
+          <div class="code-input-row">
+            <input type="text" maxlength="1" class="code-digit" data-idx="0" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit" data-idx="1" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit" data-idx="2" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit" data-idx="3" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit" data-idx="4" inputmode="numeric">
+          </div>
+          <button class="primary-btn" id="btnJoinSquad" disabled>
+            <span>Join Squad</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="text-btn" id="btnBackOnboard">Back</button>
+        </div>
+        <!-- Create Sub-view -->
+        <div class="onboard-step" id="onboardCreate" style="display:none">
+          <h2>Create a Squad</h2>
+          <p class="auth-subtitle">Give your squad a name, then share the code.</p>
+          <form id="createSquadForm" class="auth-form">
+            <div class="auth-field">
+              <label>Squad Name</label>
+              <input type="text" id="squadNameInput" placeholder="e.g. Office Crew" maxlength="24" autocomplete="off">
+            </div>
+            <button type="submit" class="primary-btn">
+              <span>Create Squad</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </form>
+          <button class="text-btn" id="btnBackOnboard2">Back</button>
+        </div>
+        <!-- Created Confirmation -->
+        <div class="onboard-step" id="onboardCreated" style="display:none">
+          <div class="onboard-illustration">
+            <svg viewBox="0 0 100 100" width="100" height="100">
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#b7f34a" stroke-width="3"/>
+              <polyline points="30 52 44 66 70 36" fill="none" stroke="#b7f34a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>Squad Created!</h2>
+          <p class="auth-subtitle">Share this code with your crew.</p>
+          <div class="squad-code-display" id="createdSquadCode">-----</div>
+          <div class="squad-share-row">
+            <button class="sec-btn" id="btnCopyCode">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Code
+            </button>
+            <button class="sec-btn" id="btnShowQR">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="22"/><line x1="14" y1="22" x2="22" y2="22"/></svg>
+              QR Code
+            </button>
+          </div>
+          <div class="qr-display" id="qrDisplay" style="display:none">
+            <canvas id="qrCanvas" width="160" height="160"></canvas>
+            <p class="qr-hint">Scan to join your squad</p>
+          </div>
+          <button class="primary-btn" id="btnFinishOnboard">Let's Grind</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MAIN APP HEADER ========== -->
+    <header class="pwa-header" id="appHeader" style="display:none">
+      <div class="header-left">
+        <div class="network-badge">
+          <span class="status-dot online"></span>
+          <span class="status-text">ONLINE</span>
+        </div>
+      </div>
+      <div class="header-title">
+        <h1>GrindStone</h1>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="themeToggleBtn" aria-label="Toggle Theme">
+          <svg class="icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- PWA Install Banner -->
+    <div class="pwa-banner" id="installBanner" style="display:none">
+      <div class="banner-content">
+        <span class="banner-icon">📲</span>
+        <div>
+          <strong>Install GrindStone</strong>
+          <p>Add to Home Screen for instant daily access.</p>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <button class="banner-btn" id="installBtn">Install</button>
+        <button class="close-btn" id="closeBannerBtn">✕</button>
+      </div>
+    </div>
+
+    <!-- ========== MAIN APP VIEWS ========== -->
+    <main class="app-body" id="appBody" style="display:none">
+
+      <!-- TODAY / DASHBOARD -->
+      <section id="viewToday" class="view-panel active">
+        <div class="squad-toggle-row" id="squadToggleToday"></div>
+
+        <div class="squad-streak-banner">
+          <div class="streak-left">
+            <span class="flame-animated">🔥</span>
+            <div>
+              <span class="streak-val" id="streakVal">0</span>
+              <span class="streak-lbl">DAY STREAK</span>
+            </div>
+          </div>
+          <div class="squad-tag" id="squadTagDash">No Squad</div>
+        </div>
+
+        <div class="daily-card" id="dailyCard">
+          <div class="card-header">
+            <span class="badge-target">DAILY GRIND</span>
+            <span class="time-left" id="timeLeft">--</span>
+          </div>
+          <h2>10 Push-Ups</h2>
+          <p id="targetStatusText">Time to put your nose to the grindstone.</p>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="dashboardProgress" style="width: 0%;"></div>
+          </div>
+          <button class="primary-btn glow-btn" id="startWorkoutBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            START 10 REPS
+          </button>
+        </div>
+
+        <div class="section-title">
+          <h3>Squad Feed Today</h3>
+          <span class="squad-count" id="squadFeedCount">--</span>
+        </div>
+        <div class="squad-list" id="squadFeedList"></div>
+      </section>
+
+      <!-- WORKOUT / REP COUNTER & NOSE CAM -->
+      <section id="viewWorkout" class="view-panel">
+        <div class="workout-head">
+          <h2>Nose-Tap Counter</h2>
+          <p>Place phone on floor below your chest. Lower down until your nose hits the target area!</p>
+        </div>
+
+        <div class="counter-ring-container">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" style="stroke-dashoffset: 326.72;"></circle>
+          </svg>
+          <div class="counter-display">
+            <span id="repNumber" class="rep-num">0</span>
+            <span class="rep-lbl">/ 10 REPS</span>
+          </div>
+        </div>
+
+        <div class="nose-target-zone" id="noseTrigger">
+          <p class="target-prompt">TAP HERE FOR EACH REP</p>
+        </div>
+
+        <div class="camera-preview-card" id="camPreviewCard">
+          <div class="cam-overlay">
+            <span class="rec-badge" id="recBadge"><span class="rec-dot"></span> REC NOSE-CAM</span>
+            <span class="cam-watermark">GRINDSTONE</span>
+          </div>
+          <div class="cam-feed-container" id="camFeedContainer">
+            <video id="camVideo" autoplay playsinline muted></video>
+            <div class="cam-placeholder" id="camPlaceholder">
+              <span>📷 Tap to enable camera</span>
+            </div>
+          </div>
+          <button class="story-toggle-btn" id="toggleStoryBtn">🎥 Camera: OFF</button>
+        </div>
+
+        <div class="workout-actions">
+          <button class="sec-btn" id="cancelWorkoutBtn">Cancel</button>
+          <button class="primary-btn" id="completeWorkoutBtn" disabled>Complete Workout</button>
+        </div>
+      </section>
+
+      <!-- SQUAD LEADERBOARD -->
+      <section id="viewSquad" class="view-panel">
+        <div class="squad-toggle-row" id="squadToggleSquad"></div>
+
+        <div class="squad-summary">
+          <h2 id="squadNameDisplay">No Squad Yet</h2>
+          <p class="motto" id="squadMotto">"Put your nose to the grindstone."</p>
+          <div class="squad-stats-row">
+            <div class="stat-cell">
+              <span class="stat-num" id="squadStreakStat">0</span>
+              <span class="stat-label">Active Streak</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-num" id="squadMemberCount">1</span>
+              <span class="stat-label">Members</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-num" id="squadSuccessRate">--%</span>
+              <span class="stat-label">Success Rate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="squad-actions-row">
+          <button class="sec-btn" id="btnShareSquad">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
+          <button class="sec-btn" id="btnSquadQR">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="22"/><line x1="14" y1="22" x2="22" y2="22"/></svg>
+            QR Code
+          </button>
+        </div>
+
+        <div class="squad-management-row">
+          <button class="text-btn danger-text" id="btnLeaveSquad">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Leave Squad
+          </button>
+          <button class="text-btn" id="btnJoinAnother">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Join Squad
+          </button>
+          <button class="text-btn" id="btnCreateSquadFromView">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Squad
+          </button>
+        </div>
+
+        <!-- Join Squad Panel -->
+        <div class="squad-switch-panel" id="joinAnotherPanel" style="display:none">
+          <h3>Join a Squad</h3>
+          <p class="auth-subtitle" style="margin-bottom:16px">Enter the 5-digit code from your friend.</p>
+          <div class="code-input-row">
+            <input type="text" maxlength="1" class="code-digit switch-digit" data-idx="0" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit switch-digit" data-idx="1" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit switch-digit" data-idx="2" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit switch-digit" data-idx="3" inputmode="numeric">
+            <input type="text" maxlength="1" class="code-digit switch-digit" data-idx="4" inputmode="numeric">
+          </div>
+          <div class="squad-switch-actions">
+            <button class="sec-btn" id="btnCancelJoinAnother">Cancel</button>
+            <button class="primary-btn" id="btnConfirmJoinAnother" disabled>
+              <span>Join Squad</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Create Squad Panel -->
+        <div class="squad-switch-panel" id="createSquadPanel" style="display:none">
+          <h3>Create a Squad</h3>
+          <p class="auth-subtitle" style="margin-bottom:16px">Give your squad a name, then share the code.</p>
+          <div class="auth-field">
+            <input type="text" id="squadNameInputView" placeholder="e.g. Office Crew" maxlength="24" autocomplete="off" style="width:100%;padding:14px 16px;background:var(--bg-card);border:1.5px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;">
+          </div>
+          <div class="squad-switch-actions">
+            <button class="sec-btn" id="btnCancelCreateSquad">Cancel</button>
+            <button class="primary-btn" id="btnConfirmCreateSquad">
+              <span>Create Squad</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Created Squad Confirmation -->
+        <div class="squad-switch-panel" id="createdSquadPanel" style="display:none">
+          <div style="margin-bottom:12px">
+            <svg viewBox="0 0 60 60" width="60" height="60">
+              <circle cx="30" cy="30" r="26" fill="none" stroke="var(--accent-primary)" stroke-width="2.5"/>
+              <polyline points="18 32 26 40 42 22" fill="none" stroke="var(--accent-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Squad Created!</h3>
+          <p class="auth-subtitle">Share this code with your crew.</p>
+          <div class="squad-code-display" id="createdSquadCodeView">-----</div>
+          <div class="squad-share-row">
+            <button class="sec-btn" id="btnCopyCodeView">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Code
+            </button>
+            <button class="sec-btn" id="btnShowQRView">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="22"/><line x1="14" y1="22" x2="22" y2="22"/></svg>
+              QR Code
+            </button>
+          </div>
+          <div class="qr-display" id="qrDisplayView" style="display:none">
+            <canvas id="qrCanvasView" width="160" height="160"></canvas>
+            <p class="qr-hint">Scan to join your squad</p>
+          </div>
+          <button class="primary-btn" id="btnDoneCreateSquad" style="margin-top:8px">Done</button>
+        </div>
+
+        <div class="squad-qr-panel" id="squadQRPanel" style="display:none">
+          <canvas id="squadQRCanvas" width="160" height="160"></canvas>
+          <p class="qr-hint">Scan to join <strong id="qrSquadName">--</strong></p>
+          <div class="squad-code-display" id="squadCodeDisplay">-----</div>
+        </div>
+
+        <div class="section-title">
+          <h3>Monthly Standings</h3>
+        </div>
+        <div class="leaderboard" id="leaderboard"></div>
+      </section>
+
+      <!-- PROFILE & SETTINGS -->
+      <section id="viewProfile" class="view-panel">
+        <div class="profile-header">
+          <div class="profile-avatar" id="profileAvatar">?</div>
+          <h3 id="profileName">User</h3>
+          <span class="profile-role" id="profileRole">GrindStone Member</span>
+        </div>
+
+        <div class="profile-stats-card">
+          <div class="profile-stat">
+            <span class="stat-num" id="profileStreak">0</span>
+            <span class="stat-label">Current Streak</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-num" id="profileBest">0</span>
+            <span class="stat-label">Best Streak</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-num" id="profileTotal">0</span>
+            <span class="stat-label">Total Reps</span>
+          </div>
+        </div>
+
+        <div class="settings-list">
+          <div class="setting-item">
+            <span>Daily Commitment</span>
+            <strong>10 Push-Ups</strong>
+          </div>
+          <div class="setting-item">
+            <span>Nose-Tap Sensor Sound</span>
+            <input type="checkbox" checked id="soundToggle">
+          </div>
+          <div class="setting-item">
+            <span>Haptic Feedback</span>
+            <input type="checkbox" checked id="hapticToggle">
+          </div>
+          <div class="setting-item">
+            <span>Viral Story Auto-Share</span>
+            <input type="checkbox" id="storyShareToggle">
+          </div>
+          <div class="setting-item">
+            <span>Offline Sync Mode</span>
+            <span class="badge-status">Active</span>
+          </div>
+        </div>
+
+        <button class="sec-btn" id="btnLogout" style="margin-top:16px;width:100%;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </section>
+    </main>
+
+    <!-- ========== BOTTOM NAV ========== -->
+    <nav class="pwa-nav" id="appNav" style="display:none">
+      <button class="nav-btn active" data-target="viewToday">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Today</span>
+      </button>
+      <button class="nav-btn" data-target="viewSquad">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>Squad</span>
+      </button>
+      <button class="nav-btn fab-workout" data-target="viewWorkout" aria-label="Start Workout">
+        <div class="fab-icon">+</div>
+      </button>
+      <button class="nav-btn" data-target="viewProfile">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+    <!-- Toast -->
+    <div class="pwa-toast" id="pwaToast">Message</div>
+  </div>
+
+  <script src="qrcode.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

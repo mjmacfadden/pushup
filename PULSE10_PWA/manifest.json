@@ -1,0 +1,15 @@
+{
+  "name": "PULSE 10 — Social Push-Up Habit",
+  "short_name": "PULSE 10",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0b0e",
+  "theme_color": "#0a0b0e",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=192&h=192&fit=crop&crop=faces",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

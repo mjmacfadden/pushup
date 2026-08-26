@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0b0e">
+  <title>PULSE 10 — PWA Wireframe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+
+  <!-- STANDALONE PWA CONTAINER (Full Viewport) -->
+  <div class="pwa-container">
+
+    <!-- Top Native Status & Header Bar -->
+    <header class="pwa-header">
+      <div class="header-left">
+        <div class="network-badge">
+          <span class="status-dot online"></span>
+          <span class="status-text">ONLINE</span>
+        </div>
+      </div>
+      <div class="header-title">
+        <h1>PULSE 10</h1>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="themeToggleBtn" aria-label="Toggle Theme">
+          <svg class="icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- PWA Installation Prompt Header Banner -->
+    <div class="pwa-banner" id="installBanner">
+      <div class="banner-content">
+        <span class="banner-icon">📲</span>
+        <div>
+          <strong>Install PULSE 10 PWA</strong>
+          <p>Add to Home Screen for instant daily access.</p>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <button class="banner-btn" id="installBtn">Install</button>
+        <button class="close-btn" id="closeBannerBtn">✕</button>
+      </div>
+    </div>
+
+    <!-- MAIN SCROLLABLE APP VIEWS -->
+    <main class="app-body">
+
+      <!-- VIEW 1: TODAY / DASHBOARD -->
+      <section id="viewToday" class="view-panel active">
+        <!-- Streak Card -->
+        <div class="squad-streak-banner">
+          <div class="streak-left">
+            <span class="flame-animated">🔥</span>
+            <div>
+              <span class="streak-val" id="streakVal">18</span>
+              <span class="streak-lbl">DAY SQUAD STREAK</span>
+            </div>
+          </div>
+          <div class="squad-tag">Alpha Squad</div>
+        </div>
+
+        <!-- Daily Target Card -->
+        <div class="daily-card" id="dailyCard">
+          <div class="card-header">
+            <span class="badge-target">DAILY MICRO-HABIT</span>
+            <span class="time-left">⏱️ 4h 12m left</span>
+          </div>
+          <h2>10 Push-Ups</h2>
+          <p id="targetStatusText">Target pending! Don't let your squad streak reset.</p>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="dashboardProgress" style="width: 0%;"></div>
+          </div>
+          <button class="primary-btn glow-btn" id="startWorkoutBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            START 10 REPS
+          </button>
+        </div>
+
+        <!-- Squad Live Status -->
+        <div class="section-title">
+          <h3>Squad Feed Today</h3>
+          <span class="squad-count">4/5 Ready</span>
+        </div>
+
+        <div class="squad-list">
+          <div class="tm-card done">
+            <div class="avatar-box">SK<span class="badge-check">✓</span></div>
+            <div class="tm-info">
+              <strong>Sarah K.</strong>
+              <span>7:15 AM • Verified Nose Tap</span>
+            </div>
+            <span class="rep-stat">10 / 10</span>
+          </div>
+
+          <div class="tm-card done">
+            <div class="avatar-box">AR<span class="badge-check">✓</span></div>
+            <div class="tm-info">
+              <strong>Alex R.</strong>
+              <span>11:40 AM • Video Story</span>
+            </div>
+            <span class="rep-stat">10 / 10</span>
+          </div>
+
+          <div class="tm-card pending" id="userCard">
+            <div class="avatar-box self">YOU</div>
+            <div class="tm-info">
+              <strong>You (Mike)</strong>
+              <span id="userSubtext">Pending 10 reps</span>
+            </div>
+            <span class="rep-stat" id="userStatText">0 / 10</span>
+          </div>
+
+          <div class="tm-card slacker" id="slackerCard">
+            <div class="avatar-box slacker">JM<span class="badge-alert">!</span></div>
+            <div class="tm-info">
+              <strong>Jake M.</strong>
+              <span class="alert-txt">⚠️ Holding back the squad!</span>
+            </div>
+            <button class="nudge-btn" id="nudgeBtn">⚡ NUDGE</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: WORKOUT / REP COUNTER & NOSE CAM -->
+      <section id="viewWorkout" class="view-panel">
+        <div class="workout-head">
+          <h2>Nose-Tap Counter</h2>
+          <p>Place phone on floor below your chest. Lower down until your nose hits the target area!</p>
+        </div>
+
+        <!-- Interactive SVG Ring Counter -->
+        <div class="counter-ring-container">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" style="stroke-dashoffset: 326.72;"></circle>
+          </svg>
+          <div class="counter-display">
+            <span id="repNumber" class="rep-num">0</span>
+            <span class="rep-lbl">/ 10 REPS</span>
+          </div>
+        </div>
+
+        <!-- Nose Tap Trigger Zone -->
+        <div class="nose-target-zone" id="noseTrigger">
+          <div class="target-crosshair"></div>
+          <p class="target-prompt">👇 TAP NOSE HERE FOR EACH REP</p>
+        </div>
+
+        <!-- Viral Story Mode Camera Simulation -->
+        <div class="camera-preview-card" id="camPreviewCard">
+          <div class="cam-overlay">
+            <span class="rec-badge"><span class="rec-dot"></span> REC NOSE-CAM</span>
+            <span class="cam-watermark">PULSE 10</span>
+          </div>
+          <div class="cam-feed-placeholder" id="camPlaceholder">
+            <span>📷 Camera Live Feed (Simulated Nose Cam)</span>
+          </div>
+          <button class="story-toggle-btn" id="toggleStoryBtn">🎥 Record Viral Story: ON</button>
+        </div>
+
+        <div class="workout-actions">
+          <button class="sec-btn" id="cancelWorkoutBtn">Cancel</button>
+          <button class="primary-btn" id="completeWorkoutBtn" disabled>Complete Workout</button>
+        </div>
+      </section>
+
+      <!-- VIEW 3: SQUAD LEADERBOARD -->
+      <section id="viewSquad" class="view-panel">
+        <div class="squad-summary">
+          <h2>Alpha Squad</h2>
+          <p class="motto">"10 reps a day keeps the streak reset away."</p>
+          <div class="squad-stats-row">
+            <div class="stat-cell">
+              <span class="stat-num">18</span>
+              <span class="stat-label">Active Streak</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-num">5/5</span>
+              <span class="stat-label">Members</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-num">98%</span>
+              <span class="stat-label">Success Rate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <h3>Monthly Standings</h3>
+        </div>
+
+        <div class="leaderboard">
+          <div class="lb-row rank-1">
+            <span class="rank">1</span>
+            <div class="lb-avatar">SK</div>
+            <div class="lb-info"><strong>Sarah K.</strong><span>30 Day Streak</span></div>
+            <span class="lb-score">300 reps</span>
+          </div>
+          <div class="lb-row rank-2">
+            <span class="rank">2</span>
+            <div class="lb-avatar">AR</div>
+            <div class="lb-info"><strong>Alex R.</strong><span>28 Day Streak</span></div>
+            <span class="lb-score">280 reps</span>
+          </div>
+          <div class="lb-row rank-3">
+            <span class="rank">3</span>
+            <div class="lb-avatar">MM</div>
+            <div class="lb-info"><strong>You (Mike)</strong><span>18 Day Streak</span></div>
+            <span class="lb-score">180 reps</span>
+          </div>
+          <div class="lb-row slacker-row">
+            <span class="rank">5</span>
+            <div class="lb-avatar">JM</div>
+            <div class="lb-info"><strong>Jake M.</strong><span>At Risk</span></div>
+            <span class="lb-score">110 reps</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: PROFILE & SETTINGS -->
+      <section id="viewProfile" class="view-panel">
+        <div class="profile-header">
+          <div class="profile-avatar">MM</div>
+          <h3>Michael Macfadden</h3>
+          <span class="profile-role">Squad Member • Alpha Squad</span>
+        </div>
+
+        <div class="settings-list">
+          <div class="setting-item">
+            <span>Daily Commitment</span>
+            <strong>10 Push-Ups</strong>
+          </div>
+          <div class="setting-item">
+            <span>Nose-Tap Sensor Sound</span>
+            <input type="checkbox" checked id="soundToggle">
+          </div>
+          <div class="setting-item">
+            <span>Haptic Feedback</span>
+            <input type="checkbox" checked id="hapticToggle">
+          </div>
+          <div class="setting-item">
+            <span>Viral Story Auto-Share</span>
+            <input type="checkbox" id="storyShareToggle">
+          </div>
+          <div class="setting-item">
+            <span>Offline Sync Mode</span>
+            <span class="badge-status">Active</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FIXED NATIVE BOTTOM NAVIGATION BAR -->
+    <nav class="pwa-nav">
+      <button class="nav-btn active" data-target="viewToday">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Today</span>
+      </button>
+
+      <button class="nav-btn" data-target="viewSquad">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>Squad</span>
+      </button>
+
+      <button class="nav-btn fab-workout" data-target="viewWorkout" aria-label="Start Workout">
+        <div class="fab-icon">+</div>
+      </button>
+
+      <button class="nav-btn" data-target="viewProfile">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+    <!-- PWA Toast Notification -->
+    <div class="pwa-toast" id="pwaToast">⚡ Alert sent!</div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
