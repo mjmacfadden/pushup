@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let bestStreak = LS.get('bestStreak', 0);
   let totalReps = LS.get('totalReps', 0);
   let lastDropDate = LS.get('lastDropDate', '');
+  let workoutHistory = LS.get('workoutHistory', {});
+  let soundEnabled = LS.get('soundEnabled', true);
+  let hapticEnabled = LS.get('hapticEnabled', true);
   let squads = LS.get('squads', []);
   let activeSquadIdx = LS.get('activeSquadIdx', 0);
   let loggedIn = LS.get('loggedIn', false);
@@ -424,9 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
     switchView('viewWorkout');
   });
 
-  document.getElementById('cancelWorkoutBtn').addEventListener('click', () => {
-    stopCamera();
-    switchView('viewToday');
+  document.getElementById('resetCounterBtn').addEventListener('click', () => {
+    currentReps = 0;
+    updateReps();
+    showToast('Counter reset');
   });
 
   // ============================================
@@ -442,13 +446,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const offset = ringCircumference - ((currentReps / targetReps) * ringCircumference);
     ringProgress.style.strokeDashoffset = offset;
     completeWorkoutBtn.disabled = currentReps < targetReps;
+    document.getElementById('resetCounterBtn').style.display = currentReps > 0 ? '' : 'none';
   }
+
+  // ============================================
+  // SOUND + HAPTIC FEEDBACK
+  // ============================================
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTapSound() {
+    if (!soundEnabled) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+  }
+
+  function triggerHaptic() {
+    if (hapticEnabled && navigator.vibrate) navigator.vibrate(40);
+  }
+
+  // Toggle handlers
+  document.getElementById('soundToggle').checked = soundEnabled;
+  document.getElementById('hapticToggle').checked = hapticEnabled;
+
+  document.getElementById('soundToggle').addEventListener('change', (e) => {
+    soundEnabled = e.target.checked;
+    LS.set('soundEnabled', soundEnabled);
+  });
+
+  document.getElementById('hapticToggle').addEventListener('change', (e) => {
+    hapticEnabled = e.target.checked;
+    LS.set('hapticEnabled', hapticEnabled);
+  });
 
   document.getElementById('noseTrigger').addEventListener('click', () => {
     if (currentReps < targetReps) {
       currentReps++;
       updateReps();
-      if (navigator.vibrate) navigator.vibrate(40);
+      playTapSound();
+      triggerHaptic();
     }
   });
 
@@ -460,6 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
       totalReps += targetReps;
       lastDropDate = todayStr();
 
+      workoutHistory[lastDropDate] = { reps: currentReps };
+      LS.set('workoutHistory', workoutHistory);
       LS.set('streak', streak);
       LS.set('bestStreak', bestStreak);
       LS.set('totalReps', totalReps);
@@ -1021,6 +1067,7 @@ document.addEventListener('DOMContentLoaded', () => {
     LS.remove('lastDropDate');
     LS.remove('squads');
     LS.remove('activeSquadIdx');
+    LS.remove('workoutHistory');
     loggedIn = false;
     username = '';
     streak = 0;
@@ -1031,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activeSquadIdx = 0;
     isDoneToday = false;
     currentReps = 0;
+    workoutHistory = {};
 
     appHeader.style.display = 'none';
     appBody.style.display = 'none';
@@ -1065,6 +1113,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('Clear ALL local data? This cannot be undone.')) return;
     localStorage.clear();
     location.reload();
+  });
+
+  document.getElementById('btnSeedDays').addEventListener('click', () => {
+    const history = {};
+    const now = new Date();
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      history[key] = { reps: 10 };
+    }
+    workoutHistory = history;
+    streak = 10;
+    bestStreak = Math.max(bestStreak, 10);
+    totalReps = 100;
+    lastDropDate = todayStr();
+    LS.set('workoutHistory', workoutHistory);
+    LS.set('streak', streak);
+    LS.set('bestStreak', bestStreak);
+    LS.set('totalReps', totalReps);
+    LS.set('lastDropDate', lastDropDate);
+    renderAll();
+    showToast('Seeded 10 days of history');
   });
 
   // ============================================

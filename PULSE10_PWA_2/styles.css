@@ -1002,6 +1002,40 @@ body.light-theme .icon-light { display: block; }
 .settings-list { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 6px 14px; }
 .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 12px; }
 .setting-item:last-child { border-bottom: none; }
+
+.setting-item input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 42px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.setting-item input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #666;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.setting-item input[type="checkbox"]:checked {
+  background: var(--accent-primary);
+}
+
+.setting-item input[type="checkbox"]:checked::after {
+  left: 21px;
+  background: #111;
+}
 .badge-status { background: rgba(183, 243, 74, 0.15); color: var(--success-color); padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; }
 
 /* ============================================
