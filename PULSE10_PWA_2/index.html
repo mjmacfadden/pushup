@@ -237,44 +237,59 @@
       </section>
 
       <!-- WORKOUT / REP COUNTER & NOSE CAM -->
-      <section id="viewWorkout" class="view-panel">
-        <div class="workout-head">
-          <h2>Nose-Tap Counter</h2>
-          <p>Place phone on floor below your chest. Lower down until your nose hits the target area!</p>
-        </div>
+      <section id="viewWorkout" class="view-panel workout-fullscreen">
+        <!-- Video Background -->
+        <div class="workout-video-bg" id="workoutVideoBg">
+          <video id="camVideo" autoplay playsinline muted></video>
+          <div class="workout-video-overlay"></div>
 
-        <div class="counter-ring-container">
-          <svg class="ring-svg" viewBox="0 0 120 120">
-            <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
-            <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" style="stroke-dashoffset: 326.72;"></circle>
-          </svg>
-          <div class="counter-display">
-            <span id="repNumber" class="rep-num">0</span>
-            <span class="rep-lbl">/ 10 REPS</span>
+          <!-- Watermark -->
+          <div class="workout-watermark">GRINDSTONE</div>
+
+          <!-- Directions -->
+          <div class="workout-directions">
+            <p>Place phone on the floor in front of you.</p>
+            <p>Tap the screen with your nose at the bottom of each rep.</p>
+            <p class="workout-directions-sub">Optionally tap the video camera to record your set.</p>
           </div>
-        </div>
 
-        <div class="nose-target-zone" id="noseTrigger">
-          <p class="target-prompt">TAP HERE FOR EACH REP</p>
-        </div>
-
-        <div class="camera-preview-card" id="camPreviewCard">
-          <div class="cam-overlay">
-            <span class="rec-badge" id="recBadge"><span class="rec-dot"></span> REC NOSE-CAM</span>
-            <span class="cam-watermark">GRINDSTONE</span>
-          </div>
-          <div class="cam-feed-container" id="camFeedContainer">
-            <video id="camVideo" autoplay playsinline muted></video>
-            <div class="cam-placeholder" id="camPlaceholder">
-              <span>📷 Tap to enable camera</span>
+          <!-- Counter (centered over video) -->
+          <div class="workout-counter">
+            <svg class="workout-ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" style="stroke-dashoffset: 326.72;"></circle>
+            </svg>
+            <div class="workout-rep-display">
+              <span id="repNumber" class="rep-num">0</span>
+              <span class="rep-lbl">/ 10 REPS</span>
             </div>
           </div>
-          <button class="story-toggle-btn" id="toggleStoryBtn">🎥 Camera: OFF</button>
-        </div>
 
-        <div class="workout-actions">
-          <button class="sec-btn" id="cancelWorkoutBtn">Cancel</button>
-          <button class="primary-btn" id="completeWorkoutBtn" disabled>Complete Workout</button>
+          <!-- Tap Zone (large, covers most of the screen) -->
+          <div class="workout-tap-zone" id="noseTrigger">
+            <div class="tap-zone-label">TAP FOR EACH REP</div>
+          </div>
+
+          <!-- Top Bar: Cancel + Rec indicator -->
+          <div class="workout-top-bar">
+            <button class="workout-top-btn" id="cancelWorkoutBtn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="workout-rec-badge" id="recBadge">
+              <span class="rec-dot"></span>
+              <span>REC</span>
+            </div>
+          </div>
+
+          <!-- Bottom Controls -->
+          <div class="workout-bottom-controls">
+            <button class="workout-record-btn" id="recordToggleBtn">
+              <svg class="cam-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </button>
+            <button class="workout-done-btn" id="completeWorkoutBtn" disabled>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+          </div>
         </div>
       </section>
 

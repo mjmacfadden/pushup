@@ -699,12 +699,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================================
-  // CAMERA
+  // CAMERA + RECORD TOGGLE
   // ============================================
   const camVideo = document.getElementById('camVideo');
-  const camPlaceholder = document.getElementById('camPlaceholder');
-  const toggleStoryBtn = document.getElementById('toggleStoryBtn');
   const recBadge = document.getElementById('recBadge');
+  const recordToggleBtn = document.getElementById('recordToggleBtn');
 
   async function startCamera() {
     try {
@@ -713,12 +712,9 @@ document.addEventListener('DOMContentLoaded', () => {
         audio: false
       });
       camVideo.srcObject = cameraStream;
-      camVideo.classList.add('active');
-      camPlaceholder.classList.add('hidden');
-      toggleStoryBtn.textContent = '🎥 Camera: ON';
-      toggleStoryBtn.classList.add('active');
-      recBadge.querySelector('.rec-dot').classList.add('active');
       cameraOn = true;
+      recordToggleBtn.classList.add('recording');
+      recBadge.classList.add('active');
     } catch (err) {
       showToast('Camera access denied');
     }
@@ -730,19 +726,14 @@ document.addEventListener('DOMContentLoaded', () => {
       cameraStream = null;
     }
     camVideo.srcObject = null;
-    camVideo.classList.remove('active');
-    camPlaceholder.classList.remove('hidden');
-    toggleStoryBtn.textContent = '🎥 Camera: OFF';
-    toggleStoryBtn.classList.remove('active');
-    recBadge.querySelector('.rec-dot').classList.remove('active');
     cameraOn = false;
+    recordToggleBtn.classList.remove('recording');
+    recBadge.classList.remove('active');
   }
 
-  toggleStoryBtn.addEventListener('click', () => {
+  recordToggleBtn.addEventListener('click', () => {
     if (cameraOn) stopCamera(); else startCamera();
   });
-
-  camPlaceholder.addEventListener('click', () => startCamera());
 
   // ============================================
   // RENDER PROFILE
