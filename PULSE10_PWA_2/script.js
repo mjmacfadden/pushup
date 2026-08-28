@@ -18,20 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // App State
   // ============================================
   let username = LS.get('username', '');
-  let streak = LS.get('streak', 0);
   let bestStreak = LS.get('bestStreak', 0);
   let totalDays = LS.get('totalDays', 0);
-  let totalReps = LS.get('totalReps', 0);
-  let lastDropDate = LS.get('lastDropDate', '');
   let workoutHistory = LS.get('workoutHistory', {});
   let soundEnabled = LS.get('soundEnabled', true);
   let hapticEnabled = LS.get('hapticEnabled', true);
   let squads = LS.get('squads', []);
   let activeSquadIdx = LS.get('activeSquadIdx', 0);
   let loggedIn = LS.get('loggedIn', false);
-  let currentReps = 0;
   const targetReps = 10;
   let isDoneToday = false;
+  let todayPushups = 0;
   let cameraStream = null;
   let cameraOn = false;
   let micStream = null;
@@ -170,13 +167,43 @@ document.addEventListener('DOMContentLoaded', () => {
     return d.toISOString().slice(0, 10);
   }
 
+  function getPushups(date) {
+    const entry = workoutHistory[date];
+    if (!entry) return 0;
+    return entry.pushups || entry.reps || 0;
+  }
+
+  function todayPushupsTotal() {
+    return getPushups(todayStr());
+  }
+
+  function weekPushupsTotal() {
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      total += getPushups(d.toISOString().slice(0, 10));
+    }
+    return total;
+  }
+
+  function yearPushupsTotal() {
+    let total = 0;
+    const now = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      total += getPushups(d.toISOString().slice(0, 10));
+    }
+    return total;
+  }
+
   function checkTodayDone() {
-    if (lastDropDate === todayStr()) {
+    todayPushups = todayPushupsTotal();
+    if (todayPushups >= targetReps) {
       isDoneToday = true;
-      currentReps = targetReps;
-    } else if (lastDropDate && lastDropDate !== yesterdayStr()) {
-      streak = 0;
-      LS.set('streak', streak);
+    } else {
+      isDoneToday = false;
     }
   }
 
@@ -379,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCommitGrid();
     renderSquadView();
     renderProfile();
+    renderStreakTab();
   }
 
   // ============================================
@@ -469,49 +497,44 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchView(btn.dataset.target));
   });
 
-  document.getElementById('startWorkoutBtn').addEventListener('click', () => {
-    if (isDoneToday) { showToast('Already done for today!'); return; }
-    currentReps = 0;
-    isDoneToday = false;
-    updateReps();
-    switchView('viewWorkout');
+  document.getElementById('logBaseBtn').addEventListener('click', () => {
+    const key = todayStr();
+    const current = getPushups(key);
+    workoutHistory[key] = { pushups: current + targetReps };
+    LS.set('workoutHistory', workoutHistory);
+    checkTodayDone();
+    renderAll();
+    showToast('10 pushups logged!');
   });
 
-  document.getElementById('resetCounterBtn').addEventListener('click', () => {
-    if (isDoneToday) {
-      isDoneToday = false;
-      streak = Math.max(0, streak - 1);
-      totalDays = Math.max(0, totalDays - 1);
-      totalReps = Math.max(0, totalReps - targetReps);
-      delete workoutHistory[todayStr()];
-      lastDropDate = '';
-      LS.set('workoutHistory', workoutHistory);
-      LS.set('streak', streak);
-      LS.set('totalDays', totalDays);
-      LS.set('totalReps', totalReps);
-      LS.set('lastDropDate', lastDropDate);
-      renderAll();
+  document.getElementById('logExtraBtn').addEventListener('click', () => {
+    const input = document.getElementById('extraPushupInput');
+    const val = parseInt(input.value, 10);
+    if (!val || val < 1) { showToast('Enter a number'); return; }
+    const key = todayStr();
+    const current = getPushups(key);
+    workoutHistory[key] = { pushups: current + val };
+    LS.set('workoutHistory', workoutHistory);
+    input.value = '';
+    checkTodayDone();
+    renderAll();
+    showToast('+' + val + ' pushups logged!');
+  });
+
+  document.getElementById('extraPushupInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('logExtraBtn').click();
     }
-    currentReps = 0;
-    updateReps();
-    showToast('Today\'s workout cleared');
   });
 
-  // ============================================
-  // COUNTER LOGIC
-  // ============================================
-  const ringCircumference = 326.72;
-  const ringProgress = document.getElementById('ringProgress');
-  const repNumber = document.getElementById('repNumber');
-  const completeWorkoutBtn = document.getElementById('completeWorkoutBtn');
-
-  function updateReps() {
-    repNumber.textContent = currentReps;
-    const offset = ringCircumference - ((currentReps / targetReps) * ringCircumference);
-    ringProgress.style.strokeDashoffset = offset;
-    completeWorkoutBtn.disabled = currentReps < targetReps;
-    document.getElementById('resetCounterBtn').style.display = currentReps > 0 ? '' : 'none';
-  }
+  document.getElementById('resetCounterBtn').addEventListener('click', async () => {
+    if (!await showConfirm('Clear today\'s pushups?')) return;
+    delete workoutHistory[todayStr()];
+    LS.set('workoutHistory', workoutHistory);
+    checkTodayDone();
+    renderAll();
+    showToast('Today\'s pushups cleared');
+  });
 
   // ============================================
   // SOUND + HAPTIC FEEDBACK
@@ -556,43 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
     LS.set('hapticEnabled', hapticEnabled);
   });
 
-  document.getElementById('noseTrigger').addEventListener('click', () => {
-    if (currentReps < targetReps) {
-      currentReps++;
-      updateReps();
-      playTapSound();
-      triggerHaptic();
-    }
-  });
-
-  completeWorkoutBtn.addEventListener('click', () => {
-    if (currentReps >= targetReps && !isDoneToday) {
-      isDoneToday = true;
-
-      if (lastDropDate && lastDropDate !== yesterdayStr()) {
-        streak = 0;
-      }
-      streak++;
-      if (streak > bestStreak) bestStreak = streak;
-      totalDays++;
-      totalReps += targetReps;
-      lastDropDate = todayStr();
-
-      workoutHistory[lastDropDate] = { reps: currentReps };
-      LS.set('workoutHistory', workoutHistory);
-      LS.set('streak', streak);
-      LS.set('bestStreak', bestStreak);
-      LS.set('totalDays', totalDays);
-      LS.set('totalReps', totalReps);
-      LS.set('lastDropDate', lastDropDate);
-
-      stopCamera();
-      renderAll();
-      switchView('viewToday');
-      showToast('Workout saved! Squad notified.');
-    }
-  });
-
   // ============================================
   // COMMIT GRID
   // ============================================
@@ -625,14 +611,14 @@ document.addEventListener('DOMContentLoaded', () => {
         cell.className = 'commit-cell';
 
         if (workoutHistory[key]) {
-          const reps = workoutHistory[key].reps || 0;
-          const level = reps >= 10 ? 4 : reps >= 7 ? 3 : reps >= 4 ? 2 : reps >= 1 ? 1 : 0;
+          const pushups = getPushups(key);
+          const level = pushups >= 10 ? 4 : pushups >= 7 ? 3 : pushups >= 4 ? 2 : pushups >= 1 ? 1 : 0;
           cell.classList.add('level-' + level);
         }
 
         const label = date.toLocaleString('default', { month: 'short', day: 'numeric' });
-        const reps = workoutHistory[key] ? workoutHistory[key].reps : 0;
-        cell.setAttribute('title', label + ': ' + reps + ' reps');
+        const pushups = getPushups(key);
+        cell.setAttribute('title', label + ': ' + pushups + ' pushups');
         col.appendChild(cell);
       }
       cellsContainer.appendChild(col);
@@ -640,28 +626,175 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================
+  // LINE GRAPH
+  // ============================================
+  function renderLineGraph() {
+    const canvas = document.getElementById('lineGraph');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const displayWidth = canvas.parentElement.clientWidth - 24;
+    const displayHeight = 180;
+    canvas.width = displayWidth * dpr;
+    canvas.height = displayHeight * dpr;
+    canvas.style.width = displayWidth + 'px';
+    canvas.style.height = displayHeight + 'px';
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
+
+    const days = 30;
+    const data = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      data.push({ date: d, key: key, pushups: getPushups(key) });
+    }
+
+    const maxVal = Math.max(10, ...data.map(d => d.pushups));
+    const padL = 32, padR = 10, padT = 14, padB = 28;
+    const w = displayWidth - padL - padR;
+    const h = displayHeight - padT - padB;
+
+    ctx.strokeStyle = 'rgba(183, 243, 74, 0.2)';
+    ctx.lineWidth = 1;
+    const goalY = padT + h - (10 / maxVal) * h;
+    ctx.beginPath();
+    ctx.moveTo(padL, goalY);
+    ctx.lineTo(padL + w, goalY);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(183, 243, 74, 0.35)';
+    ctx.font = '600 8px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('10', padL - 4, goalY + 3);
+
+    ctx.strokeStyle = 'rgba(183, 243, 74, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = padL + (i / (days - 1)) * w;
+      const y = padT + h - (d.pushups / maxVal) * h;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    data.forEach((d, i) => {
+      const x = padL + (i / (days - 1)) * w;
+      const y = padT + h - (d.pushups / maxVal) * h;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = d.pushups >= 10 ? '#b7f34a' : d.pushups > 0 ? 'rgba(183,243,74,0.5)' : 'rgba(255,255,255,0.1)';
+      ctx.fill();
+    });
+
+    ctx.fillStyle = 'var(--text-muted)';
+    ctx.font = '600 8px sans-serif';
+    ctx.textAlign = 'center';
+    const labelInterval = Math.max(1, Math.floor(days / 6));
+    data.forEach((d, i) => {
+      if (i % labelInterval === 0 || i === days - 1) {
+        const x = padL + (i / (days - 1)) * w;
+        const label = (d.date.getMonth() + 1) + '/' + d.date.getDate();
+        ctx.fillText(label, x, displayHeight - 6);
+      }
+    });
+
+    ctx.textAlign = 'right';
+    for (let v = 0; v <= maxVal; v += Math.max(10, Math.ceil(maxVal / 4))) {
+      const y = padT + h - (v / maxVal) * h;
+      ctx.fillText(v, padL - 4, y + 3);
+    }
+  }
+
+  // ============================================
+  // STREAK TABS
+  // ============================================
+  let activeStreakPeriod = 'daily';
+
+  function renderStreakTab() {
+    const valEl = document.getElementById('streakTabVal');
+    const unitEl = document.getElementById('streakTabUnit');
+    let val = 0, unit = '';
+    if (activeStreakPeriod === 'daily') {
+      val = todayPushupsTotal();
+      unit = 'pushups today';
+    } else if (activeStreakPeriod === 'weekly') {
+      val = weekPushupsTotal();
+      unit = 'pushups this week';
+    } else {
+      val = yearPushupsTotal();
+      unit = 'pushups this year';
+    }
+    valEl.textContent = val;
+    unitEl.textContent = unit;
+  }
+
+  document.querySelectorAll('.streak-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.streak-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeStreakPeriod = tab.dataset.period;
+      renderStreakTab();
+    });
+  });
+
+  // ============================================
+  // ACTIVITY TABS
+  // ============================================
+  document.querySelectorAll('.activity-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.activity-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.activity;
+      document.getElementById('panelHeatmap').classList.toggle('active', target === 'heatmap');
+      document.getElementById('panelHeatmap').style.display = target === 'heatmap' ? '' : 'none';
+      document.getElementById('panelGraph').classList.toggle('active', target === 'graph');
+      document.getElementById('panelGraph').style.display = target === 'graph' ? '' : 'none';
+      if (target === 'graph') renderLineGraph();
+    });
+  });
+
+  // ============================================
   // RENDER DASHBOARD
   // ============================================
   function renderDashboard() {
     const sq = activeSquad();
-    document.getElementById('streakVal').textContent = streak;
+    document.getElementById('streakVal').textContent = bestStreak;
     document.getElementById('bestStreakVal').textContent = bestStreak;
     document.getElementById('totalDaysVal').textContent = totalDays;
     document.getElementById('timeLeft').textContent = getTimeLeft();
 
+    todayPushups = todayPushupsTotal();
+    document.getElementById('todayPushupTotal').textContent = todayPushups;
+
+    const pct = Math.min(100, (todayPushups / targetReps) * 100);
+    document.getElementById('dashboardProgress').style.width = pct + '%';
+
+    const logBaseBtn = document.getElementById('logBaseBtn');
     if (isDoneToday) {
-      document.getElementById('dashboardProgress').style.width = '100%';
-      document.getElementById('targetStatusText').textContent = 'Completed! Squad streak is safe.';
-      const btn = document.getElementById('startWorkoutBtn');
-      btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 10 REPS DONE';
-      btn.style.pointerEvents = 'none';
+      document.getElementById('targetStatusText').textContent = 'Done! ' + todayPushups + ' pushups logged.';
+      logBaseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 10 PUSHUPS LOGGED';
+      logBaseBtn.style.pointerEvents = 'none';
+      logBaseBtn.style.opacity = '0.5';
+    } else if (todayPushups > 0) {
+      document.getElementById('targetStatusText').textContent = todayPushups + ' pushups so far. ' + (targetReps - todayPushups) + ' more to hit the daily goal.';
+      logBaseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> LOG 10 PUSHUPS';
+      logBaseBtn.style.pointerEvents = '';
+      logBaseBtn.style.opacity = '';
     } else {
-      document.getElementById('dashboardProgress').style.width = '0%';
       document.getElementById('targetStatusText').textContent = 'Time to put your nose to the grindstone.';
-      const btn = document.getElementById('startWorkoutBtn');
-      btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> START 10 REPS';
-      btn.style.pointerEvents = '';
+      logBaseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> LOG 10 PUSHUPS';
+      logBaseBtn.style.pointerEvents = '';
+      logBaseBtn.style.opacity = '';
     }
+
+    renderStreakTab();
 
     // Squad feed
     const feedList = document.getElementById('squadFeedList');
@@ -734,9 +867,9 @@ document.addEventListener('DOMContentLoaded', () => {
         '<div class="avatar-box self">' + userInitials + (isDoneToday ? '<span class="badge-check">✓</span>' : '') + '</div>' +
         '<div class="tm-info">' +
           '<strong>You (' + userName + ')</strong>' +
-          '<span>' + (isDoneToday ? 'Completed today' : 'Pending 10 reps') + '</span>' +
+          '<span>' + (isDoneToday ? todayPushups + ' pushups logged' : 'No pushups yet today') + '</span>' +
         '</div>' +
-        '<span class="rep-stat" style="' + (isDoneToday ? 'color:var(--accent-primary)' : '') + '">' + (isDoneToday ? '10/10' : '0/10') + '</span>';
+        '<span class="rep-stat" style="' + (isDoneToday ? 'color:var(--accent-primary)' : '') + '">' + todayPushups + '</span>';
       feedList.appendChild(userCard);
     }
   }
@@ -871,9 +1004,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sq = activeSquad();
     const name = sq ? sq.name : 'No Squad Yet';
     document.getElementById('squadNameDisplay').textContent = name;
-    document.getElementById('squadStreakStat').textContent = streak;
+    document.getElementById('squadStreakStat').textContent = bestStreak;
     document.getElementById('squadMemberCount').textContent = sq ? (sq.members.length + 1) : 1;
-    document.getElementById('squadSuccessRate').textContent = streak > 0 ? Math.min(100, 70 + streak) + '%' : '--%';
+    document.getElementById('squadSuccessRate').textContent = weekPushupsTotal() > 0 ? Math.min(100, Math.round((weekPushupsTotal() / (7 * targetReps)) * 100)) + '%' : '--%';
 
     const mgmtRow = document.querySelector('.squad-management-row');
     const actionsRow = document.querySelector('.squad-actions-row');
@@ -902,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sq) {
       sq.members.forEach(m => entries.push({ name: m.name, initials: m.initials, streak: m.streak, self: false }));
     }
-    entries.push({ name: username || 'You', initials: (username || 'Y').slice(0, 2).toUpperCase(), streak: streak, self: true });
+    entries.push({ name: username || 'You', initials: (username || 'Y').slice(0, 2).toUpperCase(), streak: bestStreak, self: true });
     entries.sort((a, b) => b.streak - a.streak);
 
     entries.forEach((e, i) => {
@@ -912,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '<span class="rank">' + (i + 1) + '</span>' +
         '<div class="lb-avatar' + (e.self ? ' self' : '') + '">' + e.initials + '</div>' +
         '<div class="lb-info"><strong>' + e.name + (e.self ? ' (You)' : '') + '</strong><span>' + e.streak + ' Day Streak</span></div>' +
-        '<span class="lb-score">' + (e.streak * 10) + ' reps</span>';
+        '<span class="lb-score">' + (e.streak * 10) + ' pushups</span>';
       lb.appendChild(row);
     });
   }
@@ -990,19 +1123,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateRecordBtn() {
-    const doneBtn = document.getElementById('completeWorkoutBtn');
     recordToggleBtn.classList.remove('cam-on', 'recording');
     if (recordState === 0) {
       recordToggleBtn.innerHTML = '<svg class="cam-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
-      doneBtn.style.display = '';
     } else if (recordState === 1) {
       recordToggleBtn.classList.add('cam-on');
       recordToggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/></svg>';
-      doneBtn.style.display = '';
     } else if (recordState === 2) {
       recordToggleBtn.classList.add('recording');
       recordToggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4757"/></svg>';
-      doneBtn.style.display = 'none';
       recBadge.classList.add('active');
     }
   }
@@ -1040,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cx = vw / 2;
     const cy = vh * 0.40;
     const circumference = 2 * Math.PI * 52;
-    const progress = currentReps / targetReps;
+    const progress = todayPushups / targetReps;
     const offset = circumference * (1 - progress);
 
     recordCtx.save();
@@ -1071,13 +1200,13 @@ document.addEventListener('DOMContentLoaded', () => {
     recordCtx.textBaseline = 'middle';
     recordCtx.shadowColor = 'rgba(0,0,0,0.5)';
     recordCtx.shadowBlur = 12;
-    recordCtx.fillText(String(currentReps), cx, cy);
+    recordCtx.fillText(String(todayPushups), cx, cy);
     recordCtx.shadowBlur = 0;
 
     // Rep label
     recordCtx.font = `700 ${Math.round(vw * 0.02)}px sans-serif`;
     recordCtx.fillStyle = 'rgba(255,255,255,0.5)';
-    recordCtx.fillText('/ ' + targetReps + ' REPS', cx, cy + ringR * 0.55);
+    recordCtx.fillText('/ ' + targetReps + ' PUSHUPS', cx, cy + ringR * 0.55);
     recordCtx.restore();
 
     if (isRecording) drawFrameId = requestAnimationFrame(drawFrame);
@@ -1210,7 +1339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('profileAvatar').textContent = initials;
     document.getElementById('profileName').textContent = username || 'User';
     document.getElementById('profileRole').textContent = 'GrindStone Member' + (sq ? ' • ' + sq.name : '');
-    document.getElementById('profileStreak').textContent = streak;
+    document.getElementById('profileStreak').textContent = todayPushupsTotal();
     document.getElementById('profileBest').textContent = bestStreak;
     document.getElementById('profileTotalDays').textContent = totalDays;
   }
@@ -1221,25 +1350,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnLogout').addEventListener('click', () => {
     LS.remove('loggedIn');
     LS.remove('username');
-    LS.remove('streak');
     LS.remove('bestStreak');
     LS.remove('totalDays');
-    LS.remove('totalReps');
-    LS.remove('lastDropDate');
     LS.remove('squads');
     LS.remove('activeSquadIdx');
     LS.remove('workoutHistory');
+    LS.remove('soundEnabled');
+    LS.remove('hapticEnabled');
     loggedIn = false;
     username = '';
-    streak = 0;
     bestStreak = 0;
     totalDays = 0;
-    totalReps = 0;
-    lastDropDate = '';
     squads = [];
     activeSquadIdx = 0;
     isDoneToday = false;
-    currentReps = 0;
+    todayPushups = 0;
     workoutHistory = {};
 
     appHeader.style.display = 'none';
@@ -1263,17 +1388,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnClearDay').addEventListener('click', () => {
     delete workoutHistory[todayStr()];
     LS.set('workoutHistory', workoutHistory);
-    LS.remove('lastDropDate');
-    LS.remove('totalReps');
-    LS.remove('totalDays');
-    lastDropDate = '';
-    totalReps = 0;
-    totalDays = 0;
-    streak = 0;
-    currentReps = 0;
-    isDoneToday = false;
+    checkTodayDone();
     renderAll();
-    showToast('Today\'s set cleared');
+    showToast('Today\'s pushups cleared');
   });
 
   document.getElementById('btnClearAll').addEventListener('click', async () => {
@@ -1289,20 +1406,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const d = new Date(now);
       d.setDate(d.getDate() - i - 2);
       const key = d.toISOString().slice(0, 10);
-      history[key] = { reps: 10 };
+      history[key] = { pushups: 10 };
     }
     workoutHistory = history;
-    streak = 10;
-    bestStreak = Math.max(bestStreak, 10);
+    bestStreak = 10;
     totalDays = 10;
-    totalReps = 100;
-    lastDropDate = todayStr();
     LS.set('workoutHistory', workoutHistory);
-    LS.set('streak', streak);
     LS.set('bestStreak', bestStreak);
     LS.set('totalDays', totalDays);
-    LS.set('totalReps', totalReps);
-    LS.set('lastDropDate', lastDropDate);
+    checkTodayDone();
     renderAll();
     showToast('Seeded 10 days of history');
   });
@@ -1325,6 +1437,4 @@ document.addEventListener('DOMContentLoaded', () => {
       showOnboarding();
     }
   }
-
-  updateReps();
 });

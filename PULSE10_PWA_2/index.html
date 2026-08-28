@@ -208,7 +208,7 @@
             <span class="flame-animated">🔥</span>
             <div>
               <span class="streak-val" id="streakVal">0</span>
-              <span class="streak-lbl">CURRENT STREAK</span>
+              <span class="streak-lbl">BEST STREAK</span>
             </div>
           </div>
           <div class="streak-best">
@@ -220,29 +220,60 @@
             <span class="streak-lbl">TOTAL</span>
           </div>
         </div>
+        <div class="streak-tabs">
+          <button class="streak-tab active" data-period="daily">Today</button>
+          <button class="streak-tab" data-period="weekly">Week</button>
+          <button class="streak-tab" data-period="yearly">Year</button>
+        </div>
+        <div class="streak-tab-content" id="streakTabContent">
+          <span class="streak-tab-val" id="streakTabVal">0</span>
+          <span class="streak-tab-unit" id="streakTabUnit">pushups today</span>
+        </div>
 
         <div class="daily-card" id="dailyCard">
           <div class="card-header">
             <span class="badge-target">DAILY GRIND</span>
             <span class="time-left" id="timeLeft">--</span>
           </div>
-          <h2>10 Push-Ups</h2>
+          <h2 id="dailyCardTitle">10 Push-Ups Goal</h2>
           <p id="targetStatusText">Time to put your nose to the grindstone.</p>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="dashboardProgress" style="width: 0%;"></div>
           </div>
-          <button class="primary-btn glow-btn" id="startWorkoutBtn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            START 10 REPS
+          <button class="primary-btn glow-btn" id="logBaseBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            LOG 10 PUSHUPS
           </button>
+          <div class="pushup-logger" id="pushupLogger">
+            <div class="pushup-today">
+              <span class="pushup-today-label">Today</span>
+              <span class="pushup-today-val" id="todayPushupTotal">0</span>
+              <span class="pushup-today-unit">pushups</span>
+            </div>
+            <div class="pushup-input-row">
+              <input type="number" id="extraPushupInput" class="pushup-input" placeholder="Log additional pushups" min="1" max="999" inputmode="numeric">
+              <button class="primary-btn pushup-log-btn" id="logExtraBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Log
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="section-title">
-          <h3>Activity</h3>
+        <div class="activity-tabs">
+          <button class="activity-tab active" data-activity="heatmap">Activity</button>
+          <button class="activity-tab" data-activity="graph">Trend</button>
+        </div>
+        <div class="activity-panel active" id="panelHeatmap">
+          <div class="commit-grid-wrapper">
+            <div class="commit-grid-cells" id="commitGridCells"></div>
+          </div>
           <span class="squad-count" id="gridLegend"></span>
         </div>
-        <div class="commit-grid-wrapper">
-          <div class="commit-grid-cells" id="commitGridCells"></div>
+        <div class="activity-panel" id="panelGraph" style="display:none">
+          <div class="graph-wrapper">
+            <canvas id="lineGraph" width="400" height="180"></canvas>
+          </div>
         </div>
 
         <div class="section-title">
@@ -268,25 +299,7 @@
           <!-- Directions -->
           <div class="workout-directions">
             <p>Place phone on the floor in front of you.</p>
-            <p>Tap the screen with your nose at the bottom of each rep.</p>
-            <p class="workout-directions-sub">Optionally tap the video camera to record your set.</p>
-          </div>
-
-          <!-- Counter (centered over video) -->
-          <div class="workout-counter">
-            <svg class="workout-ring-svg" viewBox="0 0 120 120">
-              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
-              <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" style="stroke-dashoffset: 326.72;"></circle>
-            </svg>
-            <div class="workout-rep-display">
-              <span id="repNumber" class="rep-num">0</span>
-              <span class="rep-lbl">/ 10 REPS</span>
-            </div>
-          </div>
-
-          <!-- Tap Zone (large, covers most of the screen) -->
-          <div class="workout-tap-zone" id="noseTrigger">
-            <div class="tap-zone-label">TAP FOR EACH REP</div>
+            <p class="workout-directions-sub">Tap the video camera icon to record your set.</p>
           </div>
 
           <!-- Top Bar: Reset + Rec indicator -->
@@ -305,7 +318,7 @@
             <button class="workout-record-btn" id="recordToggleBtn">
               <svg class="cam-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
             </button>
-            <button class="workout-done-btn" id="completeWorkoutBtn" disabled>
+            <button class="workout-done-btn" id="completeWorkoutBtn" disabled style="display:none">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           </div>
@@ -488,7 +501,7 @@
         <div class="profile-stats-card">
           <div class="profile-stat">
             <span class="stat-num" id="profileStreak">0</span>
-            <span class="stat-label">Current Streak</span>
+            <span class="stat-label">Today's Pushups</span>
           </div>
           <div class="profile-stat">
             <span class="stat-num" id="profileBest">0</span>
@@ -555,9 +568,6 @@
       <button class="nav-btn" data-target="viewSquad">
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         <span>Squad</span>
-      </button>
-      <button class="nav-btn fab-workout" data-target="viewWorkout" aria-label="Start Workout">
-        <div class="fab-icon">+</div>
       </button>
       <button class="nav-btn" data-target="viewProfile">
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>

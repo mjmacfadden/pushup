@@ -1271,3 +1271,191 @@ body.light-theme .icon-light { display: block; }
     border: none;
   }
 }
+
+/* ============================================
+   Pushup Logger
+   ============================================ */
+.pushup-logger {
+  background: var(--bg-card);
+  border: 1px solid rgba(183, 243, 74, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pushup-today {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pushup-today-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pushup-today-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+.pushup-today-unit {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.pushup-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pushup-input {
+  flex: 1;
+  padding: 12px 14px;
+  background: var(--bg-main);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+
+.pushup-input::-webkit-outer-spin-button,
+.pushup-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pushup-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.pushup-input::placeholder {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.pushup-log-btn {
+  padding: 12px 18px;
+  white-space: nowrap;
+  flex: 0;
+}
+
+/* ============================================
+   Streak Tabs
+   ============================================ */
+.streak-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.streak-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.streak-tab.active {
+  background: var(--accent-primary);
+  color: #111;
+}
+
+.streak-tab-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.streak-tab-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+.streak-tab-unit {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ============================================
+   Activity Tabs
+   ============================================ */
+.activity-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.activity-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.activity-tab.active {
+  background: var(--accent-primary);
+  color: #111;
+}
+
+.activity-panel {
+  display: none;
+}
+
+.activity-panel.active {
+  display: block;
+}
+
+/* ============================================
+   Line Graph
+   ============================================ */
+.graph-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  overflow: hidden;
+}
+
+.graph-wrapper canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
