@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetReps = 10;
   let isDoneToday = false;
   let todayPushups = 0;
+  let currentReps = 0;
   let cameraStream = null;
   let cameraOn = false;
   let micStream = null;
@@ -275,6 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
     submitLogin();
   });
 
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitLogin();
+    }
+  });
+
   // ============================================
   // ONBOARDING
   // ============================================
@@ -394,8 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
     appHeader.style.display = '';
     appBody.style.display = '';
     appNav.style.display = '';
-    pwaBanner.style.display = '';
-    renderAll();
+    pwaBanner.style.display = 'none';
+    showBanner();
     updateCountdown();
     setInterval(updateCountdown, 60000);
   }
@@ -423,18 +431,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
+  function bannerDismissedRecently() {
+    const dismissedAt = LS.get('bannerDismissed', 0);
+    if (!dismissedAt) return false;
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    return (Date.now() - dismissedAt) < oneWeek;
+  }
+
+  function showBanner() {
+    if (isStandalone || bannerDismissedRecently()) return;
+    pwaBanner.style.display = '';
+  }
+
+  function shouldShowBanner() {
+    return !isStandalone && !bannerDismissedRecently();
+  }
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (!isStandalone) pwaBanner.style.display = '';
+    if (shouldShowBanner()) pwaBanner.style.display = '';
   });
 
   // Show banner on iOS if not already installed
   if (isIOS && !isStandalone) {
-    setTimeout(() => { pwaBanner.style.display = ''; }, 3000);
+    setTimeout(() => { if (shouldShowBanner()) pwaBanner.style.display = ''; }, 3000);
   }
 
   document.getElementById('closeBannerBtn').addEventListener('click', () => {
+    LS.set('bannerDismissed', Date.now());
     pwaBanner.style.display = 'none';
   });
 
@@ -494,7 +519,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   navBtns.forEach(btn => {
-    btn.addEventListener('click', () => switchView(btn.dataset.target));
+    btn.addEventListener('click', () => {
+      if (btn.dataset.target === 'viewWorkout') {
+        if (isDoneToday) { showToast('Already done for today!'); return; }
+        currentReps = 0;
+        updateReps();
+      }
+      switchView(btn.dataset.target);
+    });
   });
 
   document.getElementById('logBaseBtn').addEventListener('click', () => {
@@ -527,13 +559,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('resetCounterBtn').addEventListener('click', async () => {
-    if (!await showConfirm('Clear today\'s pushups?')) return;
-    delete workoutHistory[todayStr()];
-    LS.set('workoutHistory', workoutHistory);
-    checkTodayDone();
-    renderAll();
-    showToast('Today\'s pushups cleared');
+  // ============================================
+  // WORKOUT VIEW — START / COUNTER / COMPLETE
+  // ============================================
+
+  // ============================================
+  // COUNTER LOGIC
+  // ============================================
+  const ringCircumference = 326.72;
+  const ringProgress = document.getElementById('ringProgress');
+  const repNumber = document.getElementById('repNumber');
+  const completeWorkoutBtn = document.getElementById('completeWorkoutBtn');
+
+  function updateReps() {
+    repNumber.textContent = currentReps;
+    const offset = ringCircumference - ((currentReps / targetReps) * ringCircumference);
+    ringProgress.style.strokeDashoffset = offset;
+    completeWorkoutBtn.disabled = currentReps < targetReps;
+    document.getElementById('resetCounterBtn').style.display = currentReps > 0 ? '' : 'none';
+  }
+
+  document.getElementById('resetCounterBtn').addEventListener('click', () => {
+    if (isDoneToday) {
+      isDoneToday = false;
+      delete workoutHistory[todayStr()];
+      LS.set('workoutHistory', workoutHistory);
+      renderAll();
+    }
+    currentReps = 0;
+    updateReps();
+    showToast('Today\'s workout cleared');
+  });
+
+  document.getElementById('noseTrigger').addEventListener('click', () => {
+    if (currentReps < targetReps) {
+      currentReps++;
+      updateReps();
+      playTapSound();
+      triggerHaptic();
+    }
+  });
+
+  completeWorkoutBtn.addEventListener('click', () => {
+    if (currentReps >= targetReps && !isDoneToday) {
+      isDoneToday = true;
+      totalDays++;
+      if (streak + 1 > bestStreak) bestStreak = streak + 1;
+      streak++;
+
+      workoutHistory[todayStr()] = { pushups: (workoutHistory[todayStr()] ? getPushups(todayStr()) : 0) + currentReps };
+      LS.set('workoutHistory', workoutHistory);
+      LS.set('bestStreak', bestStreak);
+      LS.set('totalDays', totalDays);
+
+      stopCamera();
+      renderAll();
+      switchView('viewToday');
+      showToast('Workout saved! Squad notified.');
+    }
   });
 
   // ============================================
@@ -618,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const label = date.toLocaleString('default', { month: 'short', day: 'numeric' });
         const pushups = getPushups(key);
-        cell.setAttribute('title', label + ': ' + pushups + ' pushups');
+        cell.setAttribute('data-tip', label + ': ' + pushups + ' pushups');
         col.appendChild(cell);
       }
       cellsContainer.appendChild(col);
@@ -628,6 +711,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   // LINE GRAPH
   // ============================================
+  let graphPoints = [];
+
   function renderLineGraph() {
     const canvas = document.getElementById('lineGraph');
     if (!canvas) return;
@@ -643,15 +728,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-    const days = 30;
-    const data = [];
     const now = new Date();
-    for (let i = days - 1; i >= 0; i--) {
+    now.setHours(0, 0, 0, 0);
+
+    const keys = Object.keys(workoutHistory);
+    let startDate = new Date(now);
+    if (keys.length > 0) {
+      const sorted = keys.slice().sort();
+      const first = new Date(sorted[0] + 'T00:00:00');
+      startDate = first;
+    } else {
+      startDate.setDate(startDate.getDate() - 6);
+    }
+
+    const msPerDay = 86400000;
+    const days = Math.max(1, Math.floor((now - startDate) / msPerDay) + 1);
+    const maxDays = 90;
+    const clampedDays = Math.min(days, maxDays);
+
+    const data = [];
+    for (let i = clampedDays - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
       data.push({ date: d, key: key, pushups: getPushups(key) });
     }
+
+    if (data.length === 0) return;
 
     const maxVal = Math.max(10, ...data.map(d => d.pushups));
     const padL = 32, padR = 10, padT = 14, padB = 28;
@@ -677,16 +780,18 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineCap = 'round';
     ctx.beginPath();
     data.forEach((d, i) => {
-      const x = padL + (i / (days - 1)) * w;
+      const x = padL + (i / (data.length - 1 || 1)) * w;
       const y = padT + h - (d.pushups / maxVal) * h;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
     ctx.stroke();
 
+    graphPoints = [];
     data.forEach((d, i) => {
-      const x = padL + (i / (days - 1)) * w;
+      const x = padL + (i / (data.length - 1 || 1)) * w;
       const y = padT + h - (d.pushups / maxVal) * h;
+      graphPoints.push({ x, y, date: d.date, pushups: d.pushups });
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fillStyle = d.pushups >= 10 ? '#b7f34a' : d.pushups > 0 ? 'rgba(183,243,74,0.5)' : 'rgba(255,255,255,0.1)';
@@ -696,10 +801,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.fillStyle = 'var(--text-muted)';
     ctx.font = '600 8px sans-serif';
     ctx.textAlign = 'center';
-    const labelInterval = Math.max(1, Math.floor(days / 6));
+    const labelInterval = Math.max(1, Math.floor(data.length / 6));
     data.forEach((d, i) => {
-      if (i % labelInterval === 0 || i === days - 1) {
-        const x = padL + (i / (days - 1)) * w;
+      if (i % labelInterval === 0 || i === data.length - 1) {
+        const x = padL + (i / (data.length - 1 || 1)) * w;
         const label = (d.date.getMonth() + 1) + '/' + d.date.getDate();
         ctx.fillText(label, x, displayHeight - 6);
       }
@@ -711,6 +816,43 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fillText(v, padL - 4, y + 3);
     }
   }
+
+  // ============================================
+  // GRAPH TOOLTIP
+  // ============================================
+  const graphCanvas = document.getElementById('lineGraph');
+  const graphTooltip = document.getElementById('graphTooltip');
+
+  graphCanvas.addEventListener('mousemove', (e) => {
+    const rect = graphCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    let closest = null;
+    let minDist = 20;
+    graphPoints.forEach(p => {
+      const dist = Math.sqrt((p.x - mx) ** 2 + (p.y - my) ** 2);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = p;
+      }
+    });
+
+    if (closest) {
+      const canvasRect = graphCanvas.getBoundingClientRect();
+      const label = (closest.date.getMonth() + 1) + '/' + closest.date.getDate() + '/' + String(closest.date.getFullYear()).slice(2);
+      graphTooltip.textContent = label + ' — ' + closest.pushups + ' pushups';
+      graphTooltip.style.display = 'block';
+      graphTooltip.style.left = (canvasRect.left + closest.x) + 'px';
+      graphTooltip.style.top = (canvasRect.top + closest.y - 10) + 'px';
+    } else {
+      graphTooltip.style.display = 'none';
+    }
+  });
+
+  graphCanvas.addEventListener('mouseleave', () => {
+    graphTooltip.style.display = 'none';
+  });
 
   // ============================================
   // STREAK TABS
@@ -1123,15 +1265,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateRecordBtn() {
+    const doneBtn = document.getElementById('completeWorkoutBtn');
     recordToggleBtn.classList.remove('cam-on', 'recording');
     if (recordState === 0) {
       recordToggleBtn.innerHTML = '<svg class="cam-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+      doneBtn.style.display = '';
     } else if (recordState === 1) {
       recordToggleBtn.classList.add('cam-on');
       recordToggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/></svg>';
+      doneBtn.style.display = '';
     } else if (recordState === 2) {
       recordToggleBtn.classList.add('recording');
       recordToggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4757"/></svg>';
+      doneBtn.style.display = 'none';
       recBadge.classList.add('active');
     }
   }
@@ -1169,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cx = vw / 2;
     const cy = vh * 0.40;
     const circumference = 2 * Math.PI * 52;
-    const progress = todayPushups / targetReps;
+    const progress = currentReps / targetReps;
     const offset = circumference * (1 - progress);
 
     recordCtx.save();
@@ -1200,7 +1346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     recordCtx.textBaseline = 'middle';
     recordCtx.shadowColor = 'rgba(0,0,0,0.5)';
     recordCtx.shadowBlur = 12;
-    recordCtx.fillText(String(todayPushups), cx, cy);
+    recordCtx.fillText(String(currentReps), cx, cy);
     recordCtx.shadowBlur = 0;
 
     // Rep label
@@ -1365,6 +1511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activeSquadIdx = 0;
     isDoneToday = false;
     todayPushups = 0;
+    currentReps = 0;
     workoutHistory = {};
 
     appHeader.style.display = 'none';

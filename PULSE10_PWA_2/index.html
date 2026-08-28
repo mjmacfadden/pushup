@@ -273,6 +273,7 @@
         <div class="activity-panel" id="panelGraph" style="display:none">
           <div class="graph-wrapper">
             <canvas id="lineGraph" width="400" height="180"></canvas>
+            <div class="graph-tooltip" id="graphTooltip"></div>
           </div>
         </div>
 
@@ -299,7 +300,25 @@
           <!-- Directions -->
           <div class="workout-directions">
             <p>Place phone on the floor in front of you.</p>
-            <p class="workout-directions-sub">Tap the video camera icon to record your set.</p>
+            <p>Tap the screen with your nose at the bottom of each rep.</p>
+            <p class="workout-directions-sub">Optionally tap the video camera to record your set.</p>
+          </div>
+
+          <!-- Counter (centered over video) -->
+          <div class="workout-counter">
+            <svg class="workout-ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" style="stroke-dashoffset: 326.72;"></circle>
+            </svg>
+            <div class="workout-rep-display">
+              <span id="repNumber" class="rep-num">0</span>
+              <span class="rep-lbl">/ 10 REPS</span>
+            </div>
+          </div>
+
+          <!-- Tap Zone (large, covers most of the screen) -->
+          <div class="workout-tap-zone" id="noseTrigger">
+            <div class="tap-zone-label">TAP FOR EACH REP</div>
           </div>
 
           <!-- Top Bar: Reset + Rec indicator -->
@@ -318,7 +337,7 @@
             <button class="workout-record-btn" id="recordToggleBtn">
               <svg class="cam-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
             </button>
-            <button class="workout-done-btn" id="completeWorkoutBtn" disabled style="display:none">
+            <button class="workout-done-btn" id="completeWorkoutBtn" disabled>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           </div>
@@ -568,6 +587,9 @@
       <button class="nav-btn" data-target="viewSquad">
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         <span>Squad</span>
+      </button>
+      <button class="nav-btn fab-workout" data-target="viewWorkout" aria-label="Start Workout">
+        <div class="fab-icon">+</div>
       </button>
       <button class="nav-btn" data-target="viewProfile">
         <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
